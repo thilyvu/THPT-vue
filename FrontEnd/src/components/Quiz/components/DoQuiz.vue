@@ -2,9 +2,12 @@
   <div id="container">
     <div>
       <TableLoading v-if="loading"></TableLoading>
-      <a-card v-else>
-        <div style="display: flex; align-items: center; height: 25px">
-          <h6 v-html="testName"></h6>
+      <a-card v-else   style="margin-top: 40px; height: 54px"
+        class="remove-card-body-padding responsive-listening-site-header">
+        <div style="display: flex; align-items: center; height: 54px"
+        class="responsive-listening-site-header-item"
+        >
+          <h6 v-html="testName" style="margin: 20px;"></h6>
           <div
             style="
               position: absolute;
@@ -42,15 +45,254 @@
           />
         </div>
       </a-card>
+      <div v-if="!loading" class="listening-site listening-site-responsive">
+        <div class="test-left" style="margin-top: 6.5rem">
+          <div v-for="(quiz, quizIndex) in quizzes" :key="quizIndex">
+            <div style="padding: 10px; max-width: 100%; width: 100%; max-height: 100%; ">
+              <a-collapse :bordered="false" :key="quizIndex + 1" :value="quiz" :ghost="true">
+                <template #expandIcon="{ isActive }">
+                  <a-icon style="padding-bottom: 2px" type="caret-right" :rotate="isActive ? 90 : 0" />
+                </template>
+                <a-collapse-panel style="background: white" :key="quizIndex + 1" :forceRender="true">
+                  <template v-slot:header>
+                    <div style="display: flex; align-items: center;">
+                      <b style="margin-right: 10px; display: flex; align-items: center;">{{ quiz.questionNumber }}</b>
+                      <span v-html="quiz.content"></span>
+                    </div>
+                  </template>
+                  <a-card size="small" style="border: none; padding-top: 0px !important" class="set-margin-top">
+                    <div v-if="quiz.choices && quiz.choices.length">
+                      <a-radio-group v-model="quiz.valueForRadio" @change="(val) =>handleChangeStudentKey(val, quizIndex)" class="choice-container" :class="getFlexClass(quiz.choices)">
+                        <div v-for="(answer, answerIndex) in quiz.choices" :key="answerIndex" class="flex-item">
+                          <a-radio class="radio-style-multiple" :value="answerIndex">
+                            <div class="choice-content">
+                              <b>{{ `${formatStartOfQuestion(answerIndex)} ` }}</b>
+                              <span style="margin-left: 10px" v-html="answer.choiceContent"></span>
+                            </div>
+                          </a-radio>
+                        </div>
+                      </a-radio-group>
+                    </div>
+                  </a-card>
+                </a-collapse-panel>
+              </a-collapse>
+            </div>
+          </div>
+        </div>
+        <div class="test-right">
+          <h5 style="margin-top: 1.5rem; text-align: center; color: black">
+            {{ this.testName }}
+          </h5>
+          <a-divider style="margin-left: -0.1rem" />
+          <h6 style="margin-left: 1rem; color: black; margin-bottom: 12px">
+            Question Palette
+          </h6>
+          <div style="width: 100%; display: flex">
+            <div
+              style="
+                width: 96%;
+                padding: 0px;
+                margin-left: 0.5rem;
+                height: fix-content;
+              "
+            >
+              <div style="display: flex; flex-wrap: wrap">
+                <div v-for="(item, index) in studentCheckedKeys" :key="index">
+                  <div
+                    style="margin-top: 0.5rem"
+                    v-if="
+                      listStudentKeys &&
+                      listStudentKeys[index] &&
+                      listStudentKeys[index].key !== ''
+                    "
+                  >
+                    <a-dropdown v-if="!item.isReview">
+                      <a-button
+                        size="default"
+                        :class="
+                          index > 8
+                            ? 'resize-button-primary-number'
+                            : 'normal-primary-button'
+                        "
+                        class="btn_style"
+                        type="primary"
+                        style="background: #000"
+                        @click="handleReview(index)"
+                      >
+                        {{ index + 1 }}
+                      </a-button>
+                      <template #overlay>
+                        <a-menu>
+                          <a-menu-item>
+                            <a @click="handleCheckReviewForListening(index)">
+                              {{
+                                studentCheckedKeys[index].isReview
+                                  ? "UnReview"
+                                  : "Review"
+                              }}
+                            </a>
+                          </a-menu-item>
+                        </a-menu>
+                      </template>
+                    </a-dropdown>
+
+                    <a-dropdown v-if="item.isReview">
+                      <a-button
+                        size="default"
+                        :class="
+                          index > 8
+                            ? 'resize-button-primary-number'
+                            : 'normal-primary-button'
+                        "
+                        type="primary"
+                        style="background: #000"
+                        shape="circle"
+                        class="btn_style"
+                        @click="handleReview(index)"
+                      >
+                        {{ index + 1 }}
+                      </a-button>
+
+                      <template #overlay>
+                        <a-menu>
+                          <a-menu-item>
+                            <a @click="handleCheckReviewForListening(index)">
+                              {{
+                                studentCheckedKeys[index].isReview
+                                  ? "UnReview"
+                                  : "Review"
+                              }}
+                            </a>
+                          </a-menu-item>
+                        </a-menu>
+                      </template>
+                    </a-dropdown>
+                  </div>
+                  <div style="margin-top: 0.5rem" v-else>
+                    <a-dropdown v-if="item.isReview">
+                      <a-button
+                        size="default"
+                        :class="
+                          index > 8 ? 'resize-button-number' : 'normal-button'
+                        "
+                        shape="circle"
+                        @click="handleReview(index)"
+                      >
+                        {{ index + 1 }}
+                      </a-button>
+
+                      <template #overlay>
+                        <a-menu>
+                          <a-menu-item>
+                            <a @click="handleCheckReviewForListening(index)">
+                              {{
+                                studentCheckedKeys[index].isReview
+                                  ? "UnReview"
+                                  : "Review"
+                              }}
+                            </a>
+                          </a-menu-item>
+                        </a-menu>
+                      </template>
+                    </a-dropdown>
+
+                    <a-dropdown v-else>
+                      <a-button
+                        :class="
+                          index > 8 ? 'resize-button-number' : 'normal-button'
+                        "
+                        @click="handleReview(index)"
+                        size="default"
+                      >
+                        {{ index + 1 }}
+                      </a-button>
+
+                      <template #overlay>
+                        <a-menu>
+                          <a-menu-item>
+                            <a @click="handleCheckReviewForListening(index)">
+                              {{
+                                studentCheckedKeys[index].isReview
+                                  ? "UnReview"
+                                  : "Review"
+                              }}
+                            </a>
+                          </a-menu-item>
+                        </a-menu>
+                      </template>
+                    </a-dropdown>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- <div class ="review-style">
+            <a-checkbox
+            style="display: flex; align-items: center"
+            v-if="!studentCheckedKeys[currentButtonIndex].isReview"
+            @change="handleCheckReview()"
+          >
+          <p style="color :aliceblue;margin-bottom: 0;"> Review</p>
+          </a-checkbox>
+          <a-checkbox
+            style="display: flex; align-items: center"
+            v-else
+            @change="handleCheckReview()"
+            :checked="true"
+          >
+          <p style="color :aliceblue ;margin-bottom: 0;"> Review</p>
+          </a-checkbox>
+          </div> -->
+          <div class="type-of-answer">
+            <div class="type-of-answer-item">
+              <div class="need-review-answer-container">
+                <div class="normal-answered"></div>
+                <p class="need-review-answer-label">Answered</p>
+              </div>
+              <div
+                style="margin-left: 3rem"
+                class="need-review-answer-container"
+              >
+                <div class="need-review-answered"></div>
+                <p class="need-review-answer-label">Answered need to review</p>
+              </div>
+            </div>
+            <div class="type-of-answer-item">
+              <div class="need-review-answer-container">
+                <div class="normal-answer"></div>
+                <p class="need-review-answer-label">Answer</p>
+              </div>
+              <div
+                style="margin-left: 4rem"
+                class="need-review-answer-container"
+              >
+                <div class="need-review-answer"></div>
+                <p class="need-review-answer-label">Answer need to review</p>
+              </div>
+            </div>
+          </div>
+          <div class="submit-btn">
+            <v-btn
+              color="primary"
+              dark
+              style="margin-right: 10px"
+              @click="handleSubmit"
+            >
+              <!-- <img style="width :20px; margin-right :1rem" src="../../../assets/send.png" /> -->
+              Submit
+              <v-icon dark right> mdi-send </v-icon>
+            </v-btn>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script >
-import DecoupledEditor from "@ckeditor/ckeditor5-build-decoupled-document";
 import CKEditor from "@ckeditor/ckeditor5-vue2";
 import { NotificationMixin } from "../../../mixin/Notification";
-import StudentKeys from "../../../api/studentKey";
+import QuizStudentKeys from "../../../api/quizStudentKey";
 import * as _ from "lodash";
 import store from "../../../store/index";
 import { cloneDeep } from "lodash";
@@ -68,6 +310,13 @@ export default {
       testDescription: "",
       testType: "",
       loading: false,
+      visibleSendKey : false,
+      studentCheckedKeys: [],
+      currentButtonIndex: 0,
+      listStudentKeys: [],
+      quizzes: [],
+      currentStudentKeyId: null,
+
     };
   },
   beforeUpdate() {
@@ -321,10 +570,13 @@ export default {
         this.testName = data.name;
         this.testDescription = data.testDescription;
         this.testType = data.testType;
-        for (let i = 0; i < this.totalQuestions; i++) {
+        this.quizzes = data.quizzes;
+        for (let i = 0; i < data.quizzes.length; i++) {
           this.studentCheckedKeys.push({
             content: "",
+            answer: "A",
             isReview: false,
+            quiz : data.quizzes[i]
           });
         }
         this.isShowPoint = data.isShowPoint ? data.isShowPoint : false;
@@ -348,51 +600,51 @@ export default {
       });
     this.loading = false;
 
-    // get data for test that are inprocess or has just started
-    // StudentKeys.getCurrentStudentKeyByClassAndTestIdAndStudentId({
-    //   classId: this.classId,
-    //   testId: this.$route.params.exerciseId,
-    //   studentId: this.userProfile._id,
-    // })
-    //   .then((response) => {
-    //     if (
-    //       response.data.data &&
-    //       response.data.data[0] &&
-    //       (response.data.data[0].status === "inProcess" ||
-    //         response.data.data[0].status === "started")
-    //     ) {
-    //       this.currentStudentKeyId = response.data.data[0]._id;
-    //       // this.listStudentKeys =  response.data.data[0].listKeys;
-    //       // console.log(this.listStudentKeys);
-    //       this.loading = false;
-    //     } else {
-    //       const studentKey = {
-    //         classId: this.classId,
-    //         testId: this.testId,
-    //         listKeys: this.studentCheckedKeys,
-    //         totalQuestions: this.listTopics.totalQuestions,
-    //         status: "started",
-    //       };
-    //       // create student key if student hasn't started the test before
-    //       StudentKeys.createStudentKey(studentKey)
-    //         .then((response) => {
-    //           this.currentStudentKeyId = response.data.newStudentKeyCreated._id;
-    //           this.loading = false;
-    //         })
-    //         .catch((error) => {
-    //           this.openNotificationWithIcon(
-    //             "error",
-    //             "Nộp bài thất bại",
-    //             error.response.data.message
-    //           );
-    //           this.loading = false;
-    //         });
-    //     }
-    //   })
-    //   .catch((e) => {
-    //     console.log("e", e);
-    //     this.loading = false;
-    //   });
+    //get data for test that are inprocess or has just started
+    QuizStudentKeys.getCurrentStudentKeyByClassAndTestIdAndStudentId({
+      classId: this.classId,
+      testId: this.$route.params.exerciseId,
+      studentId: this.userProfile._id,
+    })
+      .then((response) => {
+        if (
+          response.data.data &&
+          response.data.data[0] &&
+          (response.data.data[0].status === "inProcess" ||
+            response.data.data[0].status === "started")
+        ) {
+          this.currentStudentKeyId = response.data.data[0]._id;
+          // this.listStudentKeys =  response.data.data[0].listKeys;
+          // console.log(this.listStudentKeys);
+          this.loading = false;
+        } else {
+          const studentKey = {
+            classId: this.classId,
+            testId: this.testId,
+            listKeys: this.studentCheckedKeys,
+            totalQuestions: this.listTopics.totalQuestions,
+            status: "started",
+          };
+          // create student key if student hasn't started the test before
+          StudentKeys.createStudentKey(studentKey)
+            .then((response) => {
+              this.currentStudentKeyId = response.data.newStudentKeyCreated._id;
+              this.loading = false;
+            })
+            .catch((error) => {
+              this.openNotificationWithIcon(
+                "error",
+                "Nộp bài thất bại",
+                error.response.data.message
+              );studentCheckedKeys
+              this.loading = false;
+            });
+        }
+      })
+      .catch((e) => {
+        console.log("e", e);
+        this.loading = false;
+      });
   },
   watch: {
     sendTest(value) {
@@ -426,6 +678,102 @@ export default {
     onFinish() {
       // this.handleSendKeyTestAndRedirect();
     },
+    handleSubmit() {
+      this.visibleSendKey = true;
+    },
+    handleSendkeyWithDebounce: _.debounce(function () {
+      this.handleSendKeyTest(true);
+    }, 200),
+    handleCheckReview() {
+      this.studentCheckedKeys[this.currentButtonIndex].isReview =
+        !this.studentCheckedKeys[this.currentButtonIndex].isReview;
+    },
+    handleSendKeyTestAndRedirect() {
+      this.handleSendKeyTest(false);
+      this.isLeave = true;
+    },
+    handleSendKeyTest(isDoing) {
+      this.visibleSendKey = false;
+      this.sendKeyLoading = false;
+
+      const studentKey = {
+        classId: this.classId,
+        testId: this.testId,
+        listKeys: this.listStudentKeys,
+        totalQuestions: this.listStudentKeys.length,
+      };
+      this.listStudentKeys = studentKeys;
+      if (!isDoing) {
+        QuizStudentKeys.updateStudentKey(this.currentStudentKeyId, {
+          ...studentKey,
+          status: "done",
+        })
+          .then((response) => {
+            this.openNotificationWithIcon(
+              "success",
+              "Nộp bài kiểm tra thành công"
+            );
+            if (this.isShowPoint) {
+              this.studentResult = response.data;
+              this.visibleBackToExercise = true;
+            } else {
+              this.$router.push({
+                name: "quizExercise",
+                params: { id: this.classId },
+              });
+            }
+
+            const elements = document.getElementsByClassName(
+              "high-light-container"
+            );
+            const stickyElement = document.getElementsByClassName(
+              "sticky-note-container"
+            );
+            elements.forEach((el) => el.remove());
+            stickyElement.forEach((el) => el.remove());
+          })
+          .catch((error) => {
+            this.openNotificationWithIcon(
+              "error",
+              "Nộp bài kiểm tra thất bại",
+              error.response.data.message
+            );
+          });
+      } else {
+        QuizStudentKeys.updateStudentKey(this.currentStudentKeyId, {
+          ...studentKey,
+          status: "inProcess",
+        })
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((error) => {
+            this.openNotificationWithIcon(
+              "error",
+              "Cập nhật bài kiểm tra thất bại",
+              error.response.data.message
+            );
+          });
+      }
+    },
+    handleCheckReviewForListening(index) {
+      this.studentCheckedKeys[index].isReview =
+        !this.studentCheckedKeys[index].isReview;
+    },
+    handleReview(index) {
+      console.log("🚀 ~ handleReview ~ index:", index)
+    },
+    getFlexClass(choices) {
+      const needsFullWidth = choices.some(choice => choice.choiceContent.length > 50);
+      return needsFullWidth ? 'flex-100' : 'flex-auto';
+    },
+    handleChangeStudentKey(val,quizIndex) {
+      const keys = ["A", "B", "C", "D", "E"];
+      const answerKey = val.target.value;
+      this.quizzes[quizIndex].valueForRadio = answerKey;
+      this.studentCheckedKeys[quizIndex].answer = keys[answerKey]
+
+    }
   },
 };
 </script>
@@ -470,5 +818,177 @@ export default {
   background: #2c3e50;
   padding: 5px 10px;
   margin-left: 8px;
+}
+.normal-answer {
+  width: 15px;
+  height: 15px;
+  border: 1px solid white;
+  background: white;
+  border-radius: 20%;
+}
+.normal-answered {
+  width: 15px;
+  height: 15px;
+  border: 1px solid #000;
+  background: #000;
+  border-radius: 20%;
+}
+.need-review-answer {
+  width: 15px;
+  height: 15px;
+  border: 1px solid white;
+  border-radius: 50%;
+  background: white;
+}
+.need-review-answer-container {
+  display: flex;
+  align-items: center;
+}
+.need-review-answered {
+  width: 15px;
+  height: 15px;
+  border: 1px solid #000;
+  background: #000;
+  border-radius: 50%;
+}
+.need-review-answer-label {
+  color: black;
+  margin-bottom: 1px;
+  margin-left: 0.5rem;
+}
+.listening-site {
+  height: 100%;
+  background: #fff;
+  margin-top: -2.5rem;
+  padding: 0rem 0.5% 0rem 0.5%;
+  display: flex;
+}
+.test-left {
+  width: 75%;
+  margin-top: 1rem;
+}
+.test-right {
+  width: 22%;
+  background: #edd31d;
+  padding-left: 0.2rem;
+  margin-top: 2.55rem;
+  position: fixed;
+  right: 0%;
+  top: 2%;
+  height: 100vh;
+}
+.sticky-note-container {
+  height: 250px;
+  width: 235px;
+  background: #fff;
+  position: absolute;
+  border: 0.5px solid #000;
+}
+.sticky-note-header {
+  height: 25px;
+  justify-content: end;
+  display: flex;
+  background: #000;
+}
+.sticky-note-body {
+  background: #fff;
+}
+.sticky-note-input {
+  width: 100%;
+  min-height: 219px;
+}
+.high-light-btn {
+  padding: 1px;
+  margin-left: 0.1rem;
+  border-right: 1px solid #ccc;
+}
+.high-light-btn:hover {
+  background: #5e5e5e;
+}
+.high-light-container {
+  background: #000;
+  width: fit-content;
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  border-radius: 5px;
+  user-select: none;
+}
+.type-of-answer {
+  margin-left: 1rem;
+  margin-top: 1.5rem;
+}
+.type-of-answer-item {
+  display: flex;
+}
+.normal-primary-button {
+  border-radius: 20%;
+  margin-left: 10px;
+  color: white;
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 40px !important;
+}
+.normal-button {
+  border-radius: 20%;
+  margin-left: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 40px !important;
+}
+.resize-button-primary-number {
+  border-radius: 20%;
+  margin-left: 10px;
+  color: white;
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 40px !important;
+}
+.resize-button-number {
+  margin-left: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 40px !important;
+  border-radius: 20%;
+}
+.resize-button-number span {
+  margin-left: -5px;
+}
+.resize-button-primary-number span {
+  margin-left: -5px;
+}
+.submit-btn {
+  position: absolute;
+  bottom: 15%;
+  right: 10%;
+}
+.radio-style-multiple {
+  display: flex;
+  background: #f5f5f5;
+  border-radius: 5px;
+  margin-top: 0.5rem;
+  padding: 10px;
+}
+.flex-25 { width: 25%; }
+.flex-50 { width: 50%; }
+.flex-100 { width: 100%; }
+
+.flex-100 .flex-item { width: 100%;}
+.flex-auto .flex-item { width: auto; } 
+.radio-style-multiple { margin-bottom: 16px; }
+.choice-container {
+  width: 100%; display: flex; flex-wrap: wrap; justify-content: space-between;
+}
+.choice-content {
+  display: flex; align-items: center; margin-top: -3px
+}
+.remove-card-body-padding .ant-card-body {
+  padding: 0px !important;
+}
+.remove-card-body-padding {
+  position: fixed;
+  width: 100%;
+  padding: 0 1% 0 1%;
+  z-index: 1000;
 }
 </style>

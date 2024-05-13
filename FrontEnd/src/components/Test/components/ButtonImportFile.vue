@@ -327,6 +327,7 @@ export default {
 @media (max-width: 1000px) {
   .responsive-document {
     padding: 10px 0px 20px 0px;
+    color: black;
   }
 }
 @media (max-width: 400px) {
