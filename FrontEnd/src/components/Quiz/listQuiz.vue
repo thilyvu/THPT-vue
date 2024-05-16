@@ -41,7 +41,7 @@
           <h6>{{ record.bookTestName }}</h6>
         </template>
         <template slot="totalQuestions" slot-scope="record">
-          <h6>{{ record.quizzes.length }}</h6>
+          <h6>{{ record.quizzes.filter((quiz) => quiz.type !=='content' ).length }}</h6>
         </template>
         <template slot="totalStudents" slot-scope="totalStudents">
           <h6>{{ totalStudents }}</h6>
@@ -276,10 +276,10 @@ export default {
   },
   methods: {
     viewDetailTest(payload) {
-      this.$router.push({ name: "detailTest", params: { id: payload._id } });
+      this.$router.push({ name: "detailQuiz", params: { id: payload._id } });
     },
     editTest(payload) {
-      this.$router.push({ name: "editTest", params: { id: payload._id } });
+      this.$router.push({ name: "editQuiz", params: { id: payload._id } });
     },
     addFile(file) {
       console.log(file);

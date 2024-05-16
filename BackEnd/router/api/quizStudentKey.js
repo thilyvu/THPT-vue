@@ -51,10 +51,10 @@ router.post(
     await getCurrentQuizStudentKeyByClassAndQuizId(req, res);
   }
 );
-router.put("/studentKey/:id", userAuth, async (req, res) => {
+router.put("/quizStudentKey/:id", userAuth, async (req, res) => {
   await updateQuizStudentKey(req, res);
 });
-router.delete("/studentKey/:id", userAuth, async (req, res) => {
+router.delete("/quizStudentKey/:id", userAuth, async (req, res) => {
   await deleteQuizStudentKey(req, res);
 });
 

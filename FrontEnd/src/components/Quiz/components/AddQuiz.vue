@@ -3,7 +3,7 @@
     <a-row :gutter="30">
       <a-col :span="8" style="position: fixed">
         <b style="font-size: 24px; text-transform: uppercase"
-          >Create new test</b
+          >{{quizId ? isViewDetail? 'View detail test' :'Edit test' :  'Create new test' }}</b
         >
         <a-card style="margin-top: 1rem">
           <a-space direction="vertical" style="width: 100%">
@@ -95,6 +95,7 @@
           @change="chooseFile"
         />
         <v-btn
+          v-if="!isViewDetail"
           style="width: 100%; margin-top: 10px"
           color="blue-grey"
           class="ma-2 white--text responsive-document-item"
@@ -104,12 +105,13 @@
           <v-icon right dark> mdi-cloud-upload </v-icon>
         </v-btn>
         <v-btn
+          v-if="!isViewDetail"
           color="primary"
           dark
           :loading="createLoading"
           @click="handleSubmit"
           style="width: 100%; margin-top: 10px"
-          >Create test
+          >{{ quizId ? 'Edit' : 'Create' }} test
         </v-btn>
         <v-btn @click="cancel" style="width: 100%; margin-top: 10px"
           >Cancel
@@ -129,7 +131,7 @@
           <a-collapse-panel
             v-if="question.type === 'question'"
             :key="questionIndex + 1"
-            :header="`Question ${questionIndex + 1}`"
+            :header="`Question ${indexedQuestions[questionIndex].typeIndex}`"
             style="font-weight: 600"
           >
             <template #extra>
@@ -198,7 +200,7 @@
             ></template>
             <a-card>
               <b style="margin-bottom: 0.5rem">
-                Content {{ questionIndex + 1 }}</b
+                Content {{ indexedQuestions[questionIndex].typeIndex + 1}}</b
               >
               <ckeditor
                 class="custom-editor"
@@ -358,8 +360,8 @@
           </a-collapse-panel>
           <a-collapse-panel
             v-else
-            :key="questionIndex + 100"
-            :header="`Content ${questionIndex + 1}`"
+            :key="indexedQuestions[questionIndex].typeIndex+ 100"
+            :header="`Content ${indexedQuestions[questionIndex].typeIndex + 1}`"
             style="font-weight: 600"
           >
             <template #extra>
@@ -428,7 +430,7 @@
             ></template>
             <a-card>
               <b style="margin-bottom: 0.5rem">
-                Content {{ questionIndex + 1 }}</b
+                Content {{ indexedQuestions[questionIndex].typeIndex + 1 }}</b
               >
               <ckeditor
                 class="custom-editor"
@@ -601,13 +603,55 @@ export default {
       });
     Quiz.getListQuiz()
       .then((response) => {
-        this.listQuiz = response.data.data;
+        this.listQuiz = response.data.data
       })
       .catch((e) => {
         console.log("e", e);
       });
+      Quiz.getQuizById(this.$route.params.id)
+      .then((response) => {
+        const data = response.data.data;
+        console.log(data);
+        this.testName = data.name;
+        this.bookTestName = data.bookTestName;
+        this.testDescription = data.testDescription;
+        this.totalQuestions = data.quizzes.length;
+        this.listQuestions = data.quizzes.map((item) => ({
+          ...item,
+          type : item.type || "question",
+        }));
+        this.subject =  data.subject;
+        this.isShowPoint = data.isShowPoint ? data.isShowPoint : false;
+        this.countDown = data.countDownTime ? data.countDownTime : null;
+        this.loading = false;
+        this.subject = data.subject ? data.subject : "";
+        this.testType = data.testType ? data.testType : "";
+      
+      })
+      .catch((e) => {
+        console.log("e", e);
+        this.loading = false;
+      });
   },
-  computed: {},
+  computed: {
+    isViewDetail() {
+      return this.$route.params.id && window.location.href.includes('detail');
+    },
+    quizId() {
+      console.log(this.$route.params.id)
+
+      return this.$route.params.id;
+    },
+    indexedQuestions() {
+      let questionCount = 0;
+      let contentCount = 0;
+      return this.listQuestions.map((question, index) => ({
+        ...question,
+        typeIndex: question.type === 'question' ? ++questionCount : contentCount++
+        }),
+      );
+    },
+  },
   methods: {
     onReady(editor) {
       editor.ui
@@ -843,78 +887,67 @@ export default {
     },
     handleAddAnswer(val, question, listAnswers) {
       listAnswers.push(question.newAnswerText);
+      this.totalQuestions = this.listQuestions.filter((item) => item.type)
       question.newAnswerText = "";
     },
 
     async createMultipleQuestion(testId) {
       const keys = ["A", "B", "C", "D", "E"];
-      const listQuestionWithoutId = this.listQuestions.filter(
-        (question) => !question._id
-      );
-      const listQuestionWithId = this.listQuestions.filter(
-        (question) => question._id
-      );
       this.createLoading = true; // assuming there's a loading state in your data
 
       try {
+        // Process all questions to add, keeping their original order intact
         const addedQuestions = await Promise.all(
-          listQuestionWithoutId.map(async (question) => {
-            const questionForInsert = {
-              ...(question.content ? { content: question.content } : {}),
-              questionNumber: question.questionNumber,
-              choices: question.choices,
-              key: keys[question.valueForRadio],
-              ...(question.questionType
-                ? { questionType: question.questionType }
-                : {}),
-              testId: testId,
-            };
+          this.listQuestions.map(async (question, index) => {
+            if (!question._id && question.type !== 'content') {
+              // Preparing question for insertion only if it doesn't have an ID and is not content
+              const questionForInsert = {
+                ...(question.content ? { content: question.content } : {}),
+                questionNumber: question.questionNumber || (index + 1).toString(), // Maintain the order using index
+                choices: question.choices,
+                key: keys[question.valueForRadio],
+                ...(question.questionType ? { questionType: question.questionType } : {}),
+                testId: testId,
+              };
 
-            try {
-              const response = await QuestionBank.createQuestionBank(
-                questionForInsert
-              );
-              return response.data.questionBank;
-            } catch (error) {
-              console.error(
-                "Error creating question:",
-                error.response?.data?.message || error
-              );
-              throw new Error(
-                error.response?.data?.message || "Failed to create question"
-              );
+              try {
+                const response = await QuestionBank.createQuestionBank(questionForInsert);
+                return { ...response.data.questionBank, originalIndex: index }; // Keep track of original index
+              } catch (error) {
+                console.error("Error creating question:", error.response?.data?.message || error);
+                throw new Error(error.response?.data?.message || "Failed to create question");
+              }
+            } else {
+              return { ...question, originalIndex: index }; // For existing questions and content, keep original index
             }
           })
         );
 
+        // Sorting by original index to maintain initial order
+        addedQuestions.sort((a, b) => a.originalIndex - b.originalIndex);
+
+        // Update the quiz with newly created questions and existing ones
         await Quiz.updateQuiz(testId, {
-          quizzes: addedQuestions.concat(listQuestionWithId),
+          quizzes: addedQuestions,
         });
-        this.openNotificationWithIcon(
-          "success",
-          "All questions created successfully!"
-        );
+
+        this.openNotificationWithIcon("success", "All questions created successfully!");
         this.$router.push("/quiz");
       } catch (error) {
         console.error("Error in creating/updating questions:", error.message);
-        this.openNotificationWithIcon(
-          "error",
-          "Error in operation",
-          error.message
-        );
+        this.openNotificationWithIcon("error", "Error in operation", error.message);
       } finally {
         this.createLoading = false;
       }
     },
     async handleSubmit() {
       this.createLoading = true;
-      console.log(this.testName);
       let testId = "";
       if (!this.testName) {
         return;
       } else {
-        testId = this.listQuiz.find((quiz) => quiz.name === this.testName)
-          ? this.listQuiz.find((quiz) => quiz.name === this.testName)._id
+        testId = this.listQuiz && this.listQuiz.find((quiz) => quiz.name === this.testName)
+          ? this.listQuiz  && this.listQuiz.find((quiz) => quiz.name === this.testName)._id
           : null;
         if (!testId) {
           Quiz.createQuiz({
@@ -938,6 +971,11 @@ export default {
             endDate: this.testDate ? this.testDate[1]._d : new Date(),
             testType: this.testType,
             isShowPoint: this.isShowPoint,
+            ...(this.subject !== ""
+              ? {
+                subject: this.subject,
+                }
+              : {}),
           }).then((val) => {
             console.log(val.data);
             const testId = val.data.quiz._id;
@@ -975,7 +1013,7 @@ export default {
       this.testName = val;
     },
     cancel() {
-      this.openNotificationWithIcon("error", "Cancel create new test");
+      // this.openNotificationWithIcon("error", "Cancel create new test");
       this.$router.go(-1);
     },
   },

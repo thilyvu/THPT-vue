@@ -79,10 +79,10 @@
 
             <a-divider
               class="responsive-divider"
-              style="margin-left:-0.5rem; background; :black; display: none;"
+              style="margin-left:-0.5rem; background :black; display: none;"
             />
             <div
-              style="padding: 10px
+              style="padding: 10px;
               max-width: 50%;
               width: 50%;
               height: 83vh;
@@ -1055,9 +1055,9 @@
                 <div v-for="(item, index) in studentCheckedKeys" :key="index">
                   <div
                     v-if="
-                      listStudentKeys &&
-                      listStudentKeys[index] &&
-                      listStudentKeys[index].key !== ''
+                      studentCheckedKeys &&
+                      studentCheckedKeys[index] &&
+                      studentCheckedKeys[index].a !== ''
                     "
                   >
                     <a-button
@@ -1348,7 +1348,7 @@
         <div class="test-left" style="margin-top: 6.5rem">
           <div v-for="(topic, topicIndex) in listTopics" :key="topicIndex">
             <div
-              style="padding: 10px
+              style="padding: 10px;
                 max-width: 100%;
                 width: 100%;
                 max-height: 100%;

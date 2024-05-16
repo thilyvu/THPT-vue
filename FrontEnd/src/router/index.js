@@ -173,6 +173,32 @@ let routes = [
     },
   },
   {
+    path: "/quiz/edit/:id",
+    name: "editQuiz",
+    layout: "dashboard",
+    component: () => import("../components/Quiz/components/AddQuiz.vue"),
+    beforeEnter: (to, from, next) => {
+      if (VueCookies.get("token") !== null) {
+        next();
+      } else {
+        next("/sign-in");
+      }
+    },
+  },
+  {
+    path: "/quiz/detail/:id",
+    name: "detailQuiz",
+    layout: "dashboard",
+    component: () => import("../components/Quiz/components/AddQuiz.vue"),
+    beforeEnter: (to, from, next) => {
+      if (VueCookies.get("token") !== null) {
+        next();
+      } else {
+        next("/sign-in");
+      }
+    },
+  },
+  {
     path: "/test/view/:id",
     name: "detailTest",
     layout: "dashboard",

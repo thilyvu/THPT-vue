@@ -48,19 +48,19 @@
       <div v-if="!loading" class="listening-site listening-site-responsive">
         <div class="test-left" style="margin-top: 6.5rem">
           <div v-for="(quiz, quizIndex) in quizzes" :key="quizIndex">
-            <div style="padding: 10px; max-width: 100%; width: 100%; max-height: 100%; ">
+            <div v-if="quiz.type !=='content'" style="max-width: 100%; width: 100%; max-height: 100%; ">
               <a-collapse :bordered="false" :key="quizIndex + 1" :value="quiz" :ghost="true">
                 <template #expandIcon="{ isActive }">
-                  <a-icon style="padding-bottom: 2px" type="caret-right" :rotate="isActive ? 90 : 0" />
+                  <a-icon style="padding-bottom: 2px; display: none;" type="caret-right" :rotate="isActive ? 90 : 0" />
                 </template>
-                <a-collapse-panel style="background: white" :key="quizIndex + 1" :forceRender="true">
+                <a-collapse-panel   :class="`${quizIndex + 1}`" style="background: white" :key="quizIndex + 1" :forceRender="true">
                   <template v-slot:header>
                     <div style="display: flex; align-items: center;">
                       <b style="margin-right: 10px; display: flex; align-items: center;">{{ quiz.questionNumber }}</b>
                       <span v-html="quiz.content"></span>
                     </div>
                   </template>
-                  <a-card size="small" style="border: none; padding-top: 0px !important" class="set-margin-top">
+                  <a-card size="small" style="border: none; padding: 5px !important; margin-top: -10px;" class="set-margin-top">
                     <div v-if="quiz.choices && quiz.choices.length">
                       <a-radio-group v-model="quiz.valueForRadio" @change="(val) =>handleChangeStudentKey(val, quizIndex)" class="choice-container" :class="getFlexClass(quiz.choices)">
                         <div v-for="(answer, answerIndex) in quiz.choices" :key="answerIndex" class="flex-item">
@@ -76,6 +76,8 @@
                   </a-card>
                 </a-collapse-panel>
               </a-collapse>
+            </div>
+            <div v-else style="margin-left: 16px;" v-html="quiz.content">
             </div>
           </div>
         </div>
@@ -101,9 +103,9 @@
                   <div
                     style="margin-top: 0.5rem"
                     v-if="
-                      listStudentKeys &&
-                      listStudentKeys[index] &&
-                      listStudentKeys[index].key !== ''
+                      studentCheckedKeys &&
+                      studentCheckedKeys[item.studentKeyIndex] &&
+                      studentCheckedKeys[item.studentKeyIndex].answer !== ''
                     "
                   >
                     <a-dropdown v-if="!item.isReview">
@@ -117,7 +119,7 @@
                         class="btn_style"
                         type="primary"
                         style="background: #000"
-                        @click="handleReview(index)"
+                        @click="handleReview(item.studentKeyIndex)"
                       >
                         {{ index + 1 }}
                       </a-button>
@@ -148,7 +150,7 @@
                         style="background: #000"
                         shape="circle"
                         class="btn_style"
-                        @click="handleReview(index)"
+                        @click="handleReview(item.studentKeyIndex)"
                       >
                         {{ index + 1 }}
                       </a-button>
@@ -176,7 +178,7 @@
                           index > 8 ? 'resize-button-number' : 'normal-button'
                         "
                         shape="circle"
-                        @click="handleReview(index)"
+                        @click="handleReview(item.studentKeyIndex)"
                       >
                         {{ index + 1 }}
                       </a-button>
@@ -201,7 +203,7 @@
                         :class="
                           index > 8 ? 'resize-button-number' : 'normal-button'
                         "
-                        @click="handleReview(index)"
+                        @click="handleReview(item.studentKeyIndex)"
                         size="default"
                       >
                         {{ index + 1 }}
@@ -285,7 +287,88 @@
           </div>
         </div>
       </div>
+      <a-modal
+      title="Xác nhận nộp bài"
+      :visible="visibleSendKey"
+      :confirm-loading="sendKeyLoading"
+      ok-text="Xác nhận"
+      cancel-text="Hủy"
+      @ok="
+        () => {
+          handleSendKeyTest(false);
+          this.isLeave = true;
+        }
+      "
+      @cancel="() => (visibleSendKey = false)"
+    >
+      Bạn đã điền đầy đủ tất cả các câu hỏi?
+    </a-modal>
+
+    <a-modal
+      title="Xác nhận thoát"
+      :visible="visibleLeave"
+      :confirm-loading="sendKeyLoading"
+      ok-text="Xác nhận"
+      cancel-text="Hủy"
+      @ok="handleSendKeyTestAndRedirect(false)"
+      @cancel="() => (visibleLeave = false)"
+    >
+      Bạn có chắn chắn là muốn kết thúc làm bài kiểm tra?
+    </a-modal>
+    <a-modal
+      title="Kết quả bài kiểm tra"
+      :visible="visibleBackToExercise"
+      ok-text="Quay"
+      width="1400px"
+      cancel-text="Hủy"
+      :closable="false"
+      @cancel="
+        () => {
+          visibleBackToExercise = false;
+          isLeave = true;
+          handleBackToClassDetail();
+        }
+      "
+    >
+      <template slot="footer">
+        <a-button key="back" @click="handleBackToClassDetail">
+          Quay lại lớp học
+        </a-button>
+      </template>
+      <b>Điểm số của bạn là : </b>
+      <div>
+        {{ studentResult.totalCorrect }} / {{ studentResult.totalQuestions }}
+      </div>
+      <a-table
+        v-if="studentResult.data && studentResult.data.studentKeys"
+        :rowKey="makeid(10)"
+        style="height : 200px; overflow-y: scroll;margin-top: 1rem;"
+        :pagination="false"
+        :columns="innerStudentKeycolumns"
+        :data-source="addIndex(studentResult.data.studentKeys)"
+      >
+        <template slot="index" slot-scope="record">
+          <h6>{{ record.index }}</h6>
+        </template>
+        <template slot="testKey" slot-scope="record">
+          <h6>{{ record.testKey }}</h6>
+        </template>
+        <template slot="key" slot-scope="record">
+          <h6
+            v-bind:style="[
+              record.isCorrect ? { color: 'green' } : { color: 'red' },
+            ]"
+          >
+            {{ record.key }}
+          </h6>
+        </template>
+        <template slot="questionType" slot-scope="record">
+          <h6>{{ record.questionType }}</h6>
+        </template>
+      </a-table>
+    </a-modal>
     </div>
+   
   </div>
 </template>
 
@@ -313,10 +396,42 @@ export default {
       visibleSendKey : false,
       studentCheckedKeys: [],
       currentButtonIndex: 0,
+      isShowPoint: false,
+      visibleBackToExercise: false,
+      visibleLeave: false,
+      sendKeyLoading: false,
+      studentResult: {},
       listStudentKeys: [],
       quizzes: [],
+      isLeave : false,
       currentStudentKeyId: null,
+      innerStudentKeycolumns: [
+        {
+          title: "Question",
+          dataIndex: "",
+          key: "index",
+          scopedSlots: { customRender: "index" },
+        },
 
+        {
+          title: "Your Answer",
+          dataIndex: "",
+          key: "key",
+          scopedSlots: { customRender: "key" },
+        },
+        {
+          title: "Key",
+          dataIndex: "",
+          key: "testKey",
+          scopedSlots: { customRender: "testKey" },
+        },
+        {
+          title: "Question Type",
+          dataIndex: "",
+          key: "questionType",
+          scopedSlots: { customRender: "questionType" },
+        },
+      ],
     };
   },
   beforeUpdate() {
@@ -333,9 +448,25 @@ export default {
           }
         }
       }
+      let collapseHeader = document.getElementsByClassName(
+        "ant-collapse-header"
+      );
       let collapseContent = document.getElementsByClassName(
         "ant-collapse-content"
       );
+      let cardBody = document.getElementsByClassName(
+        "ant-card-body"
+      );
+      if (
+        cardBody &&
+        cardBody.length &&
+        cardBody.length > 0
+      ) {
+        for (let j = 0; j < cardBody.length; j++) {
+          cardBody[j].setAttribute("style", "padding : 0px !important")
+        }
+      }
+      let collapseItem = document.getElementsByClassName("ant-collapse-item");
       if (
         collapseContent &&
         collapseContent.length &&
@@ -349,7 +480,28 @@ export default {
             ).includes("remove-collapse")
           ) {
             collapseContent[j].style.display = "grid";
+            collapseContent[j].setAttribute("padding", 0)
           }
+        }
+      }
+      if (
+        collapseHeader &&
+        collapseHeader.length &&
+        collapseHeader.length > 0
+      ) {
+        for (let j = 0; j < collapseHeader.length; j++) {
+          collapseHeader[j].setAttribute("style", "padding : 0px 32px !important")
+
+        }
+      }
+      if (
+        collapseItem &&
+        collapseItem.length &&
+        collapseItem.length > 0
+      ) {
+        for (let j = 0; j < collapseItem.length; j++) {
+          collapseItem[j].setAttribute("style", "border-bottom : unset; background: white;")
+
         }
       }
     });
@@ -571,15 +723,19 @@ export default {
         this.testDescription = data.testDescription;
         this.testType = data.testType;
         this.quizzes = data.quizzes;
+        let counter = 0;
         for (let i = 0; i < data.quizzes.length; i++) {
-          this.studentCheckedKeys.push({
+          if(data.quizzes[i].type !== 'content' ){
+            this.studentCheckedKeys.push({
             content: "",
-            answer: "A",
+            answer: "",
             isReview: false,
-            quiz : data.quizzes[i]
+            quiz : data.quizzes[i],
+            studentKeyIndex : i
           });
+          }
         }
-        this.isShowPoint = data.isShowPoint ? data.isShowPoint : false;
+        this.isShowPoint = data && data.isShowPoint ? data.isShowPoint : false;
         let [hours, minutes, seconds] = data.countDownTime.split(":");
         this.countDown =
           Date.now() +
@@ -599,34 +755,33 @@ export default {
         console.log("e", e);
       });
     this.loading = false;
-
     //get data for test that are inprocess or has just started
-    QuizStudentKeys.getCurrentStudentKeyByClassAndTestIdAndStudentId({
+    QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizIdAndStudentId({
       classId: this.classId,
-      testId: this.$route.params.exerciseId,
-      studentId: this.userProfile._id,
+      quizId: this.$route.params.exerciseId,
+      studentId: this.userProfile.id,
     })
       .then((response) => {
         if (
           response.data.data &&
+          response.data.data.length > 0 &&
           response.data.data[0] &&
           (response.data.data[0].status === "inProcess" ||
             response.data.data[0].status === "started")
         ) {
           this.currentStudentKeyId = response.data.data[0]._id;
           // this.listStudentKeys =  response.data.data[0].listKeys;
-          // console.log(this.listStudentKeys);
           this.loading = false;
         } else {
           const studentKey = {
             classId: this.classId,
-            testId: this.testId,
-            listKeys: this.studentCheckedKeys,
-            totalQuestions: this.listTopics.totalQuestions,
+            quizId: this.testId,
+            listKeys: this.listStudentKeys,
+            totalQuestions: this.listQuestionType.length,
             status: "started",
           };
           // create student key if student hasn't started the test before
-          StudentKeys.createStudentKey(studentKey)
+          QuizStudentKeys.createStudentKey(studentKey)
             .then((response) => {
               this.currentStudentKeyId = response.data.newStudentKeyCreated._id;
               this.loading = false;
@@ -636,13 +791,12 @@ export default {
                 "error",
                 "Nộp bài thất bại",
                 error.response.data.message
-              );studentCheckedKeys
+              );
               this.loading = false;
             });
         }
       })
       .catch((e) => {
-        console.log("e", e);
         this.loading = false;
       });
   },
@@ -667,6 +821,15 @@ export default {
     classId() {
       return this.$route.params.id;
     },
+    indexedQuestions() {
+      let questionCount = 0;
+      let contentCount = 0;
+      return this.listQuestions.map((question, index) => ({
+        ...question,
+        typeIndex: question.type === 'question' ? ++questionCount : contentCount++
+        }),
+      );
+    },
     testId() {
       return this.$route.params.exerciseId;
     },
@@ -676,7 +839,7 @@ export default {
   },
   methods: {
     onFinish() {
-      // this.handleSendKeyTestAndRedirect();
+      this.handleSendKeyTestAndRedirect();
     },
     handleSubmit() {
       this.visibleSendKey = true;
@@ -698,11 +861,10 @@ export default {
 
       const studentKey = {
         classId: this.classId,
-        testId: this.testId,
-        listKeys: this.listStudentKeys,
-        totalQuestions: this.listStudentKeys.length,
+        quizId: this.testId,
+        listKeys: this.studentCheckedKeys,
+        totalQuestions: this.studentCheckedKeys.length,
       };
-      this.listStudentKeys = studentKeys;
       if (!isDoing) {
         QuizStudentKeys.updateStudentKey(this.currentStudentKeyId, {
           ...studentKey,
@@ -722,6 +884,10 @@ export default {
                 params: { id: this.classId },
               });
             }
+            // this.$router.push({
+            //     name: "quizExercise",
+            //     params: { id: this.classId },
+            //   });
 
             const elements = document.getElementsByClassName(
               "high-light-container"
@@ -761,24 +927,52 @@ export default {
         !this.studentCheckedKeys[index].isReview;
     },
     handleReview(index) {
-      console.log("🚀 ~ handleReview ~ index:", index)
+      setTimeout(() => {
+        const collection = document.getElementsByClassName(`${index + 1}`);
+        if (collection && collection[0]) {
+          let position = collection[0].getBoundingClientRect();
+          collection[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.scrollTo({
+          left: position.left,
+          top: position.top + window.scrollY - 100,
+          behavior: 'smooth'
+        });
+          collection[0].style.background = "lightblue";
+          setTimeout(() => {
+            collection[0].style.background = "white";
+          }, 2000);
+        }
+      }, 100);
     },
     getFlexClass(choices) {
       const needsFullWidth = choices.some(choice => choice.choiceContent.length > 50);
       return needsFullWidth ? 'flex-100' : 'flex-auto';
+    },
+    handleBackToClassDetail() {
+      this.$router.push({
+        name: "quizExercise",
+        params: { id: this.classId },
+      });
+    },
+    addIndex(arr) {
+      let newArr = [];
+      arr.forEach((element, index) => {
+        newArr.push({ ...element, index: index + 1 });
+      });
+      return newArr;
     },
     handleChangeStudentKey(val,quizIndex) {
       const keys = ["A", "B", "C", "D", "E"];
       const answerKey = val.target.value;
       this.quizzes[quizIndex].valueForRadio = answerKey;
       this.studentCheckedKeys[quizIndex].answer = keys[answerKey]
-
+      this.handleSendkeyWithDebounce()
     }
   },
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .range-slider__range {
   -webkit-appearance: none;
   width: 75px;
@@ -943,12 +1137,20 @@ export default {
   font-size: 13.5px;
   font-weight: 500;
   width: 40px !important;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
 }
 .resize-button-number {
   margin-left: 10px;
   font-size: 13.5px;
   font-weight: 500;
   width: 40px !important;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
   border-radius: 20%;
 }
 .resize-button-number span {
@@ -974,8 +1176,8 @@ export default {
 .flex-100 { width: 100%; }
 
 .flex-100 .flex-item { width: 100%;}
-.flex-auto .flex-item { width: auto; } 
-.radio-style-multiple { margin-bottom: 16px; }
+.flex-auto .flex-item { width: auto; min-width: 24%; } 
+// .radio-style-multiple { margin-bottom: 16px; }
 .choice-container {
   width: 100%; display: flex; flex-wrap: wrap; justify-content: space-between;
 }
@@ -985,10 +1187,19 @@ export default {
 .remove-card-body-padding .ant-card-body {
   padding: 0px !important;
 }
+.ant-card-body {
+  padding: 0px !important;
+}
 .remove-card-body-padding {
   position: fixed;
   width: 100%;
   padding: 0 1% 0 1%;
   z-index: 1000;
+  .ant-card-body {
+  padding: 0px !important;
+}
+}
+.ant-collapse-header   {
+  padding: unset !important;
 }
 </style>

@@ -20,11 +20,11 @@ const quizStudentKeySchema = new Schema(
       required: true,
     },
     totalCorrect: {
-      type: String,
+      type: Number,
       default: 0,
     },
     totalQuestions: {
-      type: String,
+      type: Number,
       default: 0,
     },
     listTopics: {

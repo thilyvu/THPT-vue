@@ -151,75 +151,19 @@ const updateQuizStudentKey = async (req, res) => {
       "-listAnswers",
     ]);
     let listTopics = _.cloneDeep(likeQuiz.listTopics);
-    let multipleChoiceList = [];
-    var totalCorrect = likeQuiz.totalQuestions;
-    var totalQuestions = likeQuiz.totalQuestions;
+    var totalCorrect = likeQuiz.quizzes.filter((quiz) => quiz.type !=='content').length;
+    var totalQuestions = likeQuiz.quizzes.filter((quiz) => quiz.type !=='content').length;
     if (result.status !== "started") {
-      likeQuiz.listKeys.map((key, keyIndex) => {
-        const studentKey = studentKeys[keyIndex].key.trim().toLowerCase();
-        const testKeys = handleFormatKey(key);
+      likeQuiz.quizzes.filter((quiz) => quiz.type !=='content').map((quiz, quizIndex) => {
+        const studentKey = studentKeys[quizIndex].answer.trim().toString();
+        
+        const testKeys = quiz.key.toString().trim();
         if (
-          studentKeys[keyIndex].questionType !==
-            "Multiple choice with more than one answer" &&
-          !testKeys.includes(studentKey)
+          studentKey !== testKeys
         ) {
           totalCorrect--;
-          studentKeys[keyIndex].isCorrect = false;
-          studentKeys[keyIndex].testKey = key
-            .replace("[", "")
-            .replace("]", "")
-            .trim();
-        } else if (
-          studentKeys[keyIndex].questionType ===
-          "Multiple choice with more than one answer"
-        ) {
-          multipleChoiceList = [key.trim().toLowerCase()];
-          for (let i = 1; i <= studentKeys[keyIndex].numberOfQuestion; i++) {
-            const subtractIndex = keyIndex - i;
-            const addIndex = keyIndex + i;
-            if (
-              subtractIndex >= 0 &&
-              subtractIndex < likeQuiz.listKeys.length &&
-              studentKeys[subtractIndex].questionType ===
-                "Multiple choice with more than one answer"
-            ) {
-              multipleChoiceList.push(
-                likeQuiz.listKeys[subtractIndex].trim().toLowerCase()
-              );
-            }
-            if (
-              addIndex >= 0 &&
-              addIndex < likeQuiz.listKeys.length &&
-              studentKeys[addIndex].questionType ===
-                "Multiple choice with more than one answer"
-            ) {
-              multipleChoiceList.push(
-                likeQuiz.listKeys[addIndex].trim().toLowerCase()
-              );
-            }
-          }
-          if (
-            !multipleChoiceList.includes(
-              studentKeys[keyIndex].key.trim().toLowerCase()
-            )
-          ) {
-            totalCorrect--;
-            studentKeys[keyIndex].isCorrect = false;
-            studentKeys[keyIndex].testKey = key
-              .replace("[", "")
-              .replace("]", "")
-              .trim();
-          } else {
-            studentKeys[keyIndex].testKey = key
-              .replace("[", "")
-              .replace("]", "")
-              .trim();
-          }
-        } else {
-          studentKeys[keyIndex].testKey = key
-            .replace("[", "")
-            .replace("]", "")
-            .trim();
+          studentKeys[quizIndex].isCorrect = false;
+          studentKeys[quizIndex].testKey = testKeys
         }
       });
       const newStudentKey = {

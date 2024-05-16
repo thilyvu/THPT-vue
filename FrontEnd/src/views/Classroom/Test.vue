@@ -186,7 +186,7 @@
       </template>
       <TableLoading v-if="studentKeyLoading" />
       <a-table
-        style="max-height : 85vh, overflow-y: scroll"
+        style="max-height : 85vh; overflow-y: scroll"
         v-else
         :columns="
           userProfile.role === 'teacher'
@@ -215,11 +215,11 @@
           v-if="userProfile.role === 'teacher' || isShowPoint"
           slot="expandedRowRender"
           slot-scope="record"
-          style="margin: 0;height : 200px, overflow-y: scroll"
+          style="margin: 0;height : 200px; overflow-y: scroll"
         >
           <a-table
             :rowKey="makeid(10)"
-            style="height : 200px, overflow-y: scroll"
+            style="height : 200px; overflow-y: scroll"
             :pagination="false"
             :columns="innerStudentKeycolumns"
             :data-source="record.studentKeys ? record.studentKeys : []"
@@ -258,7 +258,7 @@ import Quiz from "../../api/Quiz";
 
 import StudentKeys from "../../api/studentKey";
 import Class from "../../api/Class";
-import StudentKey from "../../api/studentKey";
+import QuizStudentKeys from "../../api/quizStudentKey";
 export default {
   mixins: [NotificationMixin, LocalStorageMixin],
   components: {
@@ -367,11 +367,12 @@ export default {
       ])
     )
       .then((response) => {
+
         this.listTest = response.data.data.sort((a, b) => {
-          const numA = parseInt(a.testName.split(" ")[1]);
-          const numB = parseInt(b.testName.split(" ")[1]);
-          const charA = a.testName[a.testName.indexOf("-") - 2];
-          const charB = b.testName[b.testName.indexOf("-") - 2];
+          const numA = parseInt(a.name.split(" ")[1]);
+          const numB = parseInt(b.name.split(" ")[1]);
+          const charA = a.name[a.name.indexOf("-") - 2];
+          const charB = b.name[b.name.indexOf("-") - 2];
           // If the numeric part is the same, then compare by characters.
           if (numA === numB) {
             return charA.localeCompare(charB);
@@ -385,7 +386,7 @@ export default {
         console.log(e);
       });
     this.userProfile.role === "teacher" || this.userProfile.role === "admin"
-      ? StudentKeys.getStudentKeyByClassId({
+      ? QuizStudentKeys.getStudentKeyByClassId({
           classId: this.classId,
         }).then((res) => {
           this.studentKeys = res.data.data;
@@ -393,12 +394,12 @@ export default {
             return {
               ...item,
               totalStudents: this.studentKeys.filter(
-                (key) => key.testId === item._id
+                (key) => key.quizId === item._id
               ).length,
             };
           });
         })
-      : StudentKeys.getStudentKeyByClassAndStudentId({
+      : QuizStudentKeys.getQuizStudentKeyByClassAndStudentId({
           classId: this.classId,
           studentId: this.userProfile.id,
         }).then((res) => {
@@ -446,9 +447,9 @@ export default {
       this.studentKeyLoading = true;
       const payload = {
         classId: this.classId,
-        testId: record._id,
+        quizId: record._id,
       };
-      StudentKey.getStudentKeyByClassAndTestId(payload)
+      QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizId(payload)
         .then((response) => {
           this.data = response.data.data;
           this.studentKeyLoading = false;
@@ -460,7 +461,7 @@ export default {
         });
     },
     viewDetailTest(record) {
-      this.$router.push({ name: "detailTest", params: { id: record._id } });
+      this.$router.push({ name: "detailQuiz", params: { id: record._id } });
     },
     viewCurrentStudentAnswers(record) {
       this.visibleViewStudentKeys = true;
@@ -486,7 +487,7 @@ export default {
       console.log(this.classId);
     },
     editTest(payload) {
-      this.$router.push({ name: "editTest", params: { id: payload._id } });
+      this.$router.push({ name: "editQuiz", params: { id: payload._id } });
     },
     handleDeleteTest() {
       this.deleteTestLoading = true;

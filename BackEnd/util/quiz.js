@@ -58,6 +58,13 @@ const createQuiz = async (req, res) => {
       ...result,
       createBy: req.user._id,
     });
+    let testNameNotTaken = await quizValidation(result.name);
+    if (!testNameNotTaken) {
+      return res.status(400).json({
+        message: `Test name have already taken`,
+        success: false,
+      });
+    }
     const quizSaved = await newQuiz.save();
     return res.status(201).json({
       message: "New quiz create successful ",
@@ -85,6 +92,15 @@ const updateQuiz = async (req, res) => {
       ...result,
       updateBy: req.user.id,
     };
+    if (result.name && result.name !== '' && result.name !== oldQuiz.name) {
+      let testNameNotTaken = await quizValidation(result.name);
+      if (!testNameNotTaken) {
+        return res.status(400).json({
+          message: `Test name have already taken`,
+          success: false,
+        });
+      }
+    }
     const updatedQuiz = await Object.assign(oldQuiz, updateQuiz);
     if (!updatedQuiz) return null;
     await updatedQuiz.save();
