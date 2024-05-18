@@ -56,7 +56,7 @@
                 <a-collapse-panel   :class="`${quizIndex + 1}`" style="background: white" :key="quizIndex + 1" :forceRender="true">
                   <template v-slot:header>
                     <div style="display: flex; align-items: center;">
-                      <b style="margin-right: 10px; display: flex; align-items: center;">{{ quiz.questionNumber }}</b>
+                      <b style="margin-right: 10px; display: flex; align-items: center;">{{ getQuizQuestionNumber(quiz.questionNumber) }}</b>
                       <span v-html="quiz.content"></span>
                     </div>
                   </template>
@@ -528,6 +528,9 @@ export default {
       event.preventDefault(); // Prevents the default browser action
       event.returnValue = "Are you sure you want to leave?";
     });
+    document.addEventListener('DOMContentLoaded', function() {
+      removePStyles();
+    });
     document.getElementById("container").addEventListener("keyup", (e) => {
       this.handleSendkeyWithDebounce();
     });
@@ -855,6 +858,9 @@ export default {
       this.handleSendKeyTest(false);
       this.isLeave = true;
     },
+    getQuizQuestionNumber (questionNumber) {
+      return questionNumber.match(/\d+$/)[0]
+    },
     handleSendKeyTest(isDoing) {
       this.visibleSendKey = false;
       this.sendKeyLoading = false;
@@ -921,6 +927,13 @@ export default {
             );
           });
       }
+    },
+    removePStyles() {
+      const pElements = document.querySelectorAll('p');
+
+      pElements.forEach(p => {
+        p.setAttribute('style' ,"margin: 0px !important");
+      });
     },
     handleCheckReviewForListening(index) {
       this.studentCheckedKeys[index].isReview =

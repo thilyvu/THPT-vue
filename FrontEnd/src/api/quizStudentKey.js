@@ -7,7 +7,7 @@ export default {
     return api.put("/quizStudentKey/" + id, payload);
   },
   deleteStudentKey(id) {
-    return api.delete("/quizStudentKey" + id);
+    return api.delete("/quizStudentKey/" + id);
   },
   getListStudentKey() {
     return api.get("/quizStudentKey");

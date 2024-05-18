@@ -108,9 +108,10 @@ const updateQuestionBank = async (req, res) => {
       updateQuestionBank
     );
     if (!updatedQuestionBank) return null;
-    await updatedQuestionBank.save();
+    const savedQuestion = await updatedQuestionBank.save();
     return res.status(201).json({
       message: "Question Bank update successful ",
+      questionBank: savedQuestion,
       success: true,
     });
   } catch (err) {

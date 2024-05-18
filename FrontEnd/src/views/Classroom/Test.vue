@@ -34,7 +34,7 @@
         style="padding: 10px"
       >
         <template slot="testName" slot-scope="record">
-          <h6>{{ isBookMode ? record.bookTestName : record.testName }}</h6>
+          <h6>{{ isBookMode ? record.bookTestName : record.name }}</h6>
           <p v-if="!isBookMode" style="color: gray">
             {{ record.testDescription }}
           </p>
@@ -59,14 +59,17 @@
             </div>
           </div>
         </template>
-        <template slot="testType" slot-scope="record">
-          <a-tag
-            class="tag-status ant-tag-primary"
-            v-if="record.testType === 'listening'"
-          >
-            Listening
-          </a-tag>
-          <a-tag class="tag-status ant-tag-danger" v-else> Reading </a-tag>
+        <template slot="testType" slot-scope="testType">
+          <div class="author-info">
+            <a-tag
+              class="tag-status"
+              :class="
+                testType === 'mockTest' ? 'ant-tag-danger' : 'ant-tag-primary'
+              "
+            >
+              {{ testType === "mockTest" ? "Mock Test" : "Practice" }}
+            </a-tag>
+          </div>
         </template>
         <template slot="totalAttempts" slot-scope="record">
           <h6>{{ record.listKeys.length }}</h6>
@@ -170,6 +173,17 @@
       Are you sure to remove test from this class?
     </a-modal>
     <a-modal
+      title="Remove student key from test"
+      :visible="visibleDeleteQuiz"
+      :confirm-loading="deleteTestLoading"
+      ok-text="Confirm"
+      cancel-text="Cancel"
+      @ok="handleDeleteQuiz"
+      @cancel="() => (visibleDeleteQuiz = false)"
+    >
+      Are you sure to remove student key from this test?
+    </a-modal>
+    <a-modal
       title="Your test results"
       :visible="visibleViewStudentKeys"
       class="responsive-implementer"
@@ -211,6 +225,16 @@
         <template slot="totalCorrect" slot-scope="record">
           <h6>{{ record.totalCorrect }} / {{ record.totalQuestions }}</h6>
         </template>
+        <template
+              slot="action" slot-scope="record">
+                  <a-menu-item
+                        v-if="userProfile.role !== 'student'"
+                        @click="confirmDeleteStudentKey(record)"
+                        style="display: flex"
+                      >
+                        <a-icon type="delete" style="color: red; margin-top: 5px" />
+                  </a-menu-item>
+            </template>
         <p
           v-if="userProfile.role === 'teacher' || isShowPoint"
           slot="expandedRowRender"
@@ -281,6 +305,7 @@ export default {
       listTest: null,
       selectedClasses: [],
       selectedId: null,
+      selectedQuizId: null,
       studentKeycolumns: [
         {
           title: "Test attempt",
@@ -305,6 +330,11 @@ export default {
           dataIndex: "",
           key: "totalCorrect",
           scopedSlots: { customRender: "totalCorrect" },
+        },
+        {
+              title: "",
+              key: "action",
+              scopedSlots: { customRender: "action" },
         },
       ],
       data: [],
@@ -334,12 +364,18 @@ export default {
           key: "questionType",
           scopedSlots: { customRender: "questionType" },
         },
+        {
+          title: "",
+          key: "action",
+          scopedSlots: { customRender: "action" },
+        },
       ],
       size: "default",
       listClass: [],
       page: 1,
       addClassLoading: false,
       visibleDeleteTest: false,
+      visibleDeleteQuiz: false,
       deleteTestLoading: false,
       visibleViewStudentKeys: false,
     };
@@ -353,7 +389,7 @@ export default {
     Class.getClassById(this.$route.params.id)
       .then((response) => {
         this.loading = false;
-        this.isBookMode = response.data.data.bookMode;
+        this.isBookMode = response.data.data.bookMode || false;
       })
       .catch((e) => {
         console.log("e", e);
@@ -390,14 +426,14 @@ export default {
           classId: this.classId,
         }).then((res) => {
           this.studentKeys = res.data.data;
-          this.listTest = this.listTest.map((item) => {
+          this.listTest = this.listTest && this.listTest.length > 0 ?  this.listTest.map((item) => {
             return {
               ...item,
               totalStudents: this.studentKeys.filter(
                 (key) => key.quizId === item._id
               ).length,
             };
-          });
+          }) : [];
         })
       : QuizStudentKeys.getQuizStudentKeyByClassAndStudentId({
           classId: this.classId,
@@ -519,11 +555,46 @@ export default {
         .catch((err) => {
           this.openNotificationWithIcon(
             "error",
-            "Remove test from failed class"
+            "Remove test from class failed"
           );
           this.deleteTestLoading = false;
           this.selectedId = null;
           this.visibleDeleteTest = false;
+        });
+    },
+    handleDeleteQuiz() {
+      this.deleteTestLoading = true;
+      QuizStudentKeys.deleteStudentKey(this.selectedQuizId).then((response) => {
+          this.openNotificationWithIcon(
+            "success",
+            "Delete student key from test successfully"
+          );
+          this.deleteTestLoading = false;
+          this.visibleDeleteQuiz = false;
+          const payload = {
+            classId: this.classId,
+            quizId: this.selectedId,
+          };
+          QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizId(payload)
+          .then((response) => {
+            this.data = response.data.data;
+            this.studentKeyLoading = false;
+            this.isShowPoint = response.data.test.isShowPoint;
+          })
+          .catch((e) => {
+            this.studentKeyLoading = false;
+            console.log(e);
+          });
+        })
+        .catch((err) => {
+          console.log(err)
+          this.openNotificationWithIcon(
+            "error",
+            "Remove student key from test failed"
+          );
+          this.deleteTestLoading = false;
+          this.selectedQuizId = null;
+          this.visibleDeleteQuiz = false;
         });
     },
     addTestToClass(payload) {
@@ -567,6 +638,10 @@ export default {
     confirmDelete(payload) {
       this.visibleDeleteTest = true;
       this.selectedId = payload._id;
+    },
+    confirmDeleteStudentKey(payload) {
+      this.visibleDeleteQuiz = true;
+      this.selectedQuizId = payload._id;
     },
     handleSubmit() {
       this.$router.push("/test/add");

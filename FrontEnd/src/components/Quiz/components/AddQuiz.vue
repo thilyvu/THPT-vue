@@ -917,8 +917,22 @@ export default {
                 console.error("Error creating question:", error.response?.data?.message || error);
                 throw new Error(error.response?.data?.message || "Failed to create question");
               }
-            } else {
-              return { ...question, originalIndex: index }; // For existing questions and content, keep original index
+            } else { 
+              const questionForUpdate = {
+                ...(question.content ? { content: question.content } : {}),
+                questionNumber: question.questionNumber || (index + 1).toString(), // Maintain the order using index
+                choices: question.choices,
+                key: keys[question.valueForRadio],
+                ...(question.questionType ? { questionType: question.questionType } : {}),
+                testId: testId,
+              };
+              try {
+                const response = await QuestionBank.updateQuestionBank(questionForUpdate, question._id);
+                return { ...response.data.questionBank, originalIndex: index }; // Keep track of original index
+              } catch (error) {
+                console.error("Error creating question:", error.response?.data?.message || error);
+                throw new Error(error.response?.data?.message || "Failed to create question");
+              }
             }
           })
         );
