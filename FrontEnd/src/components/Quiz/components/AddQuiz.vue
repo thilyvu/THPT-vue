@@ -917,7 +917,7 @@ export default {
                 console.error("Error creating question:", error.response?.data?.message || error);
                 throw new Error(error.response?.data?.message || "Failed to create question");
               }
-            } else { 
+            } else if (question.type !== 'content') { 
               const questionForUpdate = {
                 ...(question.content ? { content: question.content } : {}),
                 questionNumber: question.questionNumber || (index + 1).toString(), // Maintain the order using index
@@ -933,6 +933,8 @@ export default {
                 console.error("Error creating question:", error.response?.data?.message || error);
                 throw new Error(error.response?.data?.message || "Failed to create question");
               }
+            } else {
+              return { ...question, originalIndex: index };
             }
           })
         );
