@@ -200,7 +200,7 @@
             ></template>
             <a-card>
               <b style="margin-bottom: 0.5rem">
-                Content {{ indexedQuestions[questionIndex].typeIndex + 1}}</b
+                Content </b
               >
               <ckeditor
                 class="custom-editor"
@@ -309,7 +309,7 @@
                         :style="{
                           marginLeft: '0.3rem',
                           marginBottom: choice.choiceContent.includes('<p>')
-                            ? '-1em'
+                            ? '0px'
                             : 'inherit',
                         }"
                       ></div>
@@ -361,7 +361,7 @@
           <a-collapse-panel
             v-else
             :key="indexedQuestions[questionIndex].typeIndex+ 100"
-            :header="`Content ${indexedQuestions[questionIndex].typeIndex + 1}`"
+            :header="`Content`"
             style="font-weight: 600"
           >
             <template #extra>
@@ -608,10 +608,11 @@ export default {
       .catch((e) => {
         console.log("e", e);
       });
+      const labels = ["A", "B", "C", "D"];
+
       Quiz.getQuizById(this.$route.params.id)
       .then((response) => {
         const data = response.data.data;
-        console.log(data);
         this.testName = data.name;
         this.bookTestName = data.bookTestName;
         this.testDescription = data.testDescription;
@@ -619,6 +620,7 @@ export default {
         this.listQuestions = data.quizzes.map((item) => ({
           ...item,
           type : item.type || "question",
+          valueForRadio: labels.findIndex((label) => label === item.key)
         }));
         this.subject =  data.subject;
         this.isShowPoint = data.isShowPoint ? data.isShowPoint : false;
@@ -893,60 +895,39 @@ export default {
 
     async createMultipleQuestion(testId) {
       const keys = ["A", "B", "C", "D", "E"];
-      this.createLoading = true; // assuming there's a loading state in your data
+      this.createLoading = true;
+
+      const buildQuestionObject = (question, index) => ({
+        ...(question.content ? { content: question.content } : {}),
+        questionNumber: question.questionNumber || (index + 1).toString(),
+        choices: question.choices,
+        key: keys[question.valueForRadio],
+        ...(question.questionType ? { questionType: question.questionType } : {}),
+        testId: testId,
+      });
 
       try {
-        // Process all questions to add, keeping their original order intact
         const addedQuestions = await Promise.all(
           this.listQuestions.map(async (question, index) => {
-            if (!question._id && question.type !== 'content') {
-              // Preparing question for insertion only if it doesn't have an ID and is not content
-              const questionForInsert = {
-                ...(question.content ? { content: question.content } : {}),
-                questionNumber: question.questionNumber || (index + 1).toString(), // Maintain the order using index
-                choices: question.choices,
-                key: keys[question.valueForRadio],
-                ...(question.questionType ? { questionType: question.questionType } : {}),
-                testId: testId,
-              };
-
+            if (question.type !== 'content') {
+              const questionObj = buildQuestionObject(question, index);
               try {
-                const response = await QuestionBank.createQuestionBank(questionForInsert);
-                return { ...response.data.questionBank, originalIndex: index }; // Keep track of original index
+                const response = question._id ? 
+                  await QuestionBank.updateQuestionBank(question._id, questionObj) :
+                  await QuestionBank.createQuestionBank(questionObj);
+                return { ...response.data.questionBank, originalIndex: index };
               } catch (error) {
-                console.error("Error creating question:", error.response?.data?.message || error);
-                throw new Error(error.response?.data?.message || "Failed to create question");
-              }
-            } else if (question.type !== 'content') { 
-              const questionForUpdate = {
-                ...(question.content ? { content: question.content } : {}),
-                questionNumber: question.questionNumber || (index + 1).toString(), // Maintain the order using index
-                choices: question.choices,
-                key: keys[question.valueForRadio],
-                ...(question.questionType ? { questionType: question.questionType } : {}),
-                testId: testId,
-              };
-              try {
-                const response = await QuestionBank.updateQuestionBank(questionForUpdate, question._id);
-                return { ...response.data.questionBank, originalIndex: index }; // Keep track of original index
-              } catch (error) {
-                console.error("Error creating question:", error.response?.data?.message || error);
-                throw new Error(error.response?.data?.message || "Failed to create question");
+                console.error("Error processing question:", error.response?.data?.message || error);
+                throw new Error(error.response?.data?.message || "Failed to process question");
               }
             } else {
               return { ...question, originalIndex: index };
             }
           })
         );
-
-        // Sorting by original index to maintain initial order
+        console.log(addedQuestions);
         addedQuestions.sort((a, b) => a.originalIndex - b.originalIndex);
-
-        // Update the quiz with newly created questions and existing ones
-        await Quiz.updateQuiz(testId, {
-          quizzes: addedQuestions,
-        });
-
+        await Quiz.updateQuiz(testId, { quizzes: addedQuestions });
         this.openNotificationWithIcon("success", "All questions created successfully!");
         this.$router.push("/quiz");
       } catch (error) {
@@ -956,6 +937,7 @@ export default {
         this.createLoading = false;
       }
     },
+
     async handleSubmit() {
       this.createLoading = true;
       let testId = "";
