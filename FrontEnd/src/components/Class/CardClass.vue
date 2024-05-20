@@ -31,7 +31,7 @@
                 <a class="icon-more" @click="(e) => e.preventDefault()">
                   <a-icon type="more"
                 /></a>
-                <a-menu slot="overlay" v-if="isSearch">
+                <a-menu slot="overlay" v-if="!checkIfIsInClass(item._id) && userProfile.role !== 'teacher'">
                   <a-menu-item @click="joinClass(item)">
                     <a-icon type="form" /> Xin vào lớp
                   </a-menu-item>
@@ -112,6 +112,10 @@ export default {
       type: Array,
       default: null,
     },
+    listPersonalClass: {
+      type: Array,
+      default: null,
+    },
     isSearch: {
       type: Boolean,
       default: false,
@@ -136,6 +140,10 @@ export default {
     confirmDelete(item) {
       this.deleteData = item;
       this.isDelete = true;
+    },
+    checkIfIsInClass(id) {
+      console.log(id,  this.listPersonalClass.findIndex((item) => item._id === id))
+      this.listPersonalClass.findIndex((item) => item._id === id) > -1
     },
     deleteClass() {
       this.$emit("delete", this.deleteData._id);

@@ -56,7 +56,7 @@
                 <a-collapse-panel   :class="`${quizIndex + 1}`" style="background: white" :key="quizIndex + 1" :forceRender="true">
                   <template v-slot:header>
                     <div style="display: flex; align-items: center;">
-                      <b style="margin-right: 10px; display: flex; align-items: center;">{{  indexedQuestions[quizIndex].typeIndex  }}</b>
+                      <b style="margin-right: 10px; display: flex; align-items: center;">{{ getQuizQuestionNumber(quiz.questionNumber) }}</b>
                       <span v-html="quiz.content"></span>
                     </div>
                   </template>
@@ -827,7 +827,7 @@ export default {
     indexedQuestions() {
       let questionCount = 0;
       let contentCount = 0;
-      return this.quizzes.map((question, index) => ({
+      return this.listQuestions.map((question, index) => ({
         ...question,
         typeIndex: question.type === 'question' ? ++questionCount : contentCount++
         }),

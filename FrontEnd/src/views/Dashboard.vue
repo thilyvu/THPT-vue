@@ -66,7 +66,8 @@
       </a-row>
       <CardClass
         style="padding-bottom: 1.5rem; padding-left: 2%; padding-right: 2%"
-        :listClass="filterData"
+        :listClass="filterData.length > 0  ? filterData : filterFullClassData"
+        :listPersonalClass = "filterData"
         :isSearch="isSearch"
         @delete="deleteClass"
         @join="joinClass"

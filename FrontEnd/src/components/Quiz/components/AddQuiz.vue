@@ -620,6 +620,8 @@ export default {
         this.listQuestions = data.quizzes.map((item) => ({
           ...item,
           type : item.type || "question",
+          isEditing : false,
+          currentEditIndex: 0,
           valueForRadio: labels.findIndex((label) => label === item.key)
         }));
         this.subject =  data.subject;
@@ -866,10 +868,12 @@ export default {
       this.oldTotalQuestion = val;
     },
     handleEdit(questionIndex, choiceIndex) {
+      console.log('in',questionIndex, choiceIndex)
       this.listQuestions[questionIndex].isEditing = true;
       this.listQuestions[questionIndex].currentEditIndex = choiceIndex;
       this.listQuestions[questionIndex].newAnswerText =
         this.listQuestions[questionIndex].choices[choiceIndex].choiceContent;
+        console.log(this.listQuestions)
     },
     handleAddQuestion() {
       this.visibleAddQuestion = false;
