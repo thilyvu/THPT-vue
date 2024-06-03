@@ -844,6 +844,31 @@ export default {
     onFinish() {
       this.handleSendKeyTestAndRedirect();
     },
+    handleChangeFontSize(val) {
+      const fontSize = `${val.target.value}px`;
+      this.changeFont(
+          document.getElementsByClassName("test-left")[0],
+          fontSize
+        );
+        this.changeFont(
+          document.getElementsByClassName("test-left")[1],
+          fontSize
+        );
+        this.changeFont(
+          document.getElementsByClassName("test-left")[2],
+          fontSize
+        );
+        this.changeFont(
+          document.getElementsByClassName("test-left")[3],
+          fontSize
+        );
+    },
+    changeFont(element, fontSize) {
+      element.style.fontSize = fontSize.toString();
+      for (var i = 0; i < element.children.length; i++) {
+        this.changeFont(element.children[i], fontSize);
+      }
+    },
     handleSubmit() {
       this.visibleSendKey = true;
     },
