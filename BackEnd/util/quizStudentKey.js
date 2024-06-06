@@ -368,7 +368,7 @@ const getCurrentQuizStudentKeyByClassAndQuizId = async (req, res) => {
     );
     const listStudentKey = await QuizStudentKey.find({
       $and: [
-        { classId: mongoose.Types.ObjectId(result.classId) },
+        // { classId: mongoose.Types.ObjectId(result.classId) },
         { quizId: mongoose.Types.ObjectId(result.quizId) },
       ],
     });
