@@ -4,7 +4,7 @@
     <a-row class="responsive-member" :gutter="20" v-else>
       <a-col :span="userProfile.role === 'teacher' ? 16 : 24">
         <ListMember
-          v-if="listStudent.length > 0"
+          v-if="listStudent && listStudent.length > 0"
           :listStudent="listStudent"
           :columns="MemembersColumns"
           @delete="deleteMember"

@@ -370,7 +370,6 @@ const getCurrentQuizStudentKeyByClassAndQuizId = async (req, res) => {
       $and: [
         { classId: mongoose.Types.ObjectId(result.classId) },
         { quizId: mongoose.Types.ObjectId(result.quizId) },
-        { createBy: mongoose.Types.ObjectId(req.user._id) },
       ],
     });
     const userIds = listStudentKey.flatMap((studentKey) =>

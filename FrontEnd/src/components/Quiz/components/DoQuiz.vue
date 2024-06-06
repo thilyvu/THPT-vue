@@ -62,7 +62,7 @@
                   </template>
                   <a-card size="small" style="border: none; padding: 5px !important; margin-top: -10px;" class="set-margin-top">
                     <div v-if="quiz.choices && quiz.choices.length">
-                      <a-radio-group v-model="quiz.valueForRadio" @change="(val) =>handleChangeStudentKey(val, quizIndex)" class="choice-container" :class="getFlexClass(quiz.choices)">
+                      <a-radio-group v-model="quiz.valueForRadio" @change="(val) =>handleChangeStudentKey(val, quizIndex, indexedQuestions[quizIndex].typeIndex )" class="choice-container" :class="getFlexClass(quiz.choices)">
                         <div v-for="(answer, answerIndex) in quiz.choices" :key="answerIndex" class="flex-item">
                           <a-radio class="radio-style-multiple" :value="answerIndex">
                             <div class="choice-content">
@@ -104,8 +104,8 @@
                     style="margin-top: 0.5rem"
                     v-if="
                       studentCheckedKeys &&
-                      studentCheckedKeys[item.studentKeyIndex] &&
-                      studentCheckedKeys[item.studentKeyIndex].answer !== ''
+                      studentCheckedKeys[index] &&
+                      studentCheckedKeys[index].answer !== ''
                     "
                   >
                     <a-dropdown v-if="!item.isReview">
@@ -707,7 +707,6 @@ export default {
         div.appendChild(fill3);
         div.appendChild(filldelete);
         div.appendChild(fillAddnote);
-
         document.body.appendChild(div);
       }
     });
@@ -827,9 +826,10 @@ export default {
     indexedQuestions() {
       let questionCount = 0;
       let contentCount = 0;
-      return this.listQuestions.map((question, index) => ({
+
+      return this.quizzes.map((question, index) => ({
         ...question,
-        typeIndex: question.type === 'question' ? ++questionCount : contentCount++
+        typeIndex: question.type === 'content' ? contentCount++ : questionCount++
         }),
       );
     },
@@ -884,7 +884,7 @@ export default {
       this.isLeave = true;
     },
     getQuizQuestionNumber (questionNumber) {
-      return questionNumber.match(/\d+$/)[0]
+      return questionNumber && questionNumber.match(/\d+$/) &&  questionNumber.match(/\d+$/).length > 0 ? questionNumber.match(/\d+$/)[0] : ''
     },
     handleSendKeyTest(isDoing) {
       this.visibleSendKey = false;
@@ -959,6 +959,10 @@ export default {
       pElements.forEach(p => {
         p.setAttribute('style' ,"margin: 0px !important");
       });
+      const spanElements = document.querySelectorAll('span');
+            spanElements.forEach(p => {
+              spanElements.setAttribute('color' ,"#000 !important");
+      });
     },
     handleCheckReviewForListening(index) {
       this.studentCheckedKeys[index].isReview =
@@ -999,11 +1003,11 @@ export default {
       });
       return newArr;
     },
-    handleChangeStudentKey(val,quizIndex) {
+    handleChangeStudentKey(val,quizIndex, answerIndex) {
       const keys = ["A", "B", "C", "D", "E"];
       const answerKey = val.target.value;
       this.quizzes[quizIndex].valueForRadio = answerKey;
-      this.studentCheckedKeys[quizIndex].answer = keys[answerKey]
+      this.studentCheckedKeys[answerIndex].answer = keys[answerKey]
       this.handleSendkeyWithDebounce()
     }
   },
@@ -1011,6 +1015,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+span {
+  color : black
+}
 .range-slider__range {
   -webkit-appearance: none;
   width: 75px;
@@ -1239,5 +1246,542 @@ export default {
 }
 .ant-collapse-header   {
   padding: unset !important;
+}
+
+.p-fix-content {
+  width: fit-content;
+}
+::-webkit-scrollbar {
+  width: 0px;
+}
+.radio-style {
+  display: flex;
+  justify-content: start;
+  background: #f5f5f5;
+  border-radius: 5px;
+  margin-top: 0.5rem;
+  padding: 10px;
+  align-items: center;
+}
+.radio-style-multiple {
+  display: flex;
+  background: #f5f5f5;
+  border-radius: 5px;
+  margin-top: 0.5rem;
+  padding: 10px;
+}
+.edu-editor img {
+  width: 100% !important;
+}
+.edu-editor {
+  p {
+    color: black;
+    font-weight: 400;
+  }
+}
+div {
+  color: black;
+  font-weight: 400;
+}
+.ant-collapse-header {
+  padding-bottom: 0px;
+  cursor: pointer !important;
+  color: black !important;
+}
+.set-margin-top {
+  margin-top: -1.5rem;
+}
+.set-small-margin-top {
+  margin-top: -1rem;
+}
+.answer-list {
+  min-height: 150px;
+}
+.ant-btn-sm {
+  height: 1.6rem;
+  width: 1.6rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.edu-editor {
+  overflow: scroll;
+}
+figure .table::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+figure .table::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.1);
+}
+figure .table::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.edu-editor img {
+  width: 100% !important;
+}
+.edu-editor table {
+  width: 100% !important;
+  border: 0.5px solid black !important;
+}
+.edu-editor table td {
+  border: 0.5px solid black !important;
+}
+.edu-editor table tr {
+  border: 0.5px solid black !important;
+}
+.scc {
+  max-width: 30em;
+  display: block;
+  padding: 10px;
+  font-family: Sans-serif;
+}
+.scc audio {
+  width: 100%;
+  display: block;
+  color: black;
+}
+.scc div {
+  display: flex;
+  padding: 0.5em 0;
+  gap: 5px;
+}
+.scc label {
+  flex: 1;
+}
+.scc input[type="range"] {
+  flex: 5;
+}
+.scc span {
+  flex: 1;
+  text-align: center;
+}
+.custom-audio {
+  margin-left: -1.2rem;
+  width: 470px;
+}
+.review-style {
+  display: flex;
+  align-items: center;
+  margin-left: 1.5rem;
+  margin-top: 1rem;
+}
+audio::-webkit-media-controls-panel {
+  background-color: #fff;
+  /* border: 1px solid cadetblue */
+}
+#pbrate {
+  border: solid 0.5px #ccc;
+  background: linear-gradient(to right, #000 0%, #000 40%, #ccc 40%, #ccc 100%);
+  border-radius: 8px;
+  height: 4px;
+  width: 400px;
+  outline: none;
+  transition: background 450ms ease-in;
+  -webkit-appearance: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  border: none;
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  background: #5e5e5e;
+}
+.listening-site {
+  height: 100%;
+  background: #fff;
+  margin-top: -2.5rem;
+  padding: 0rem 0.5% 0rem 0.5%;
+  display: flex;
+}
+.test-left {
+  width: 75%;
+  margin-top: 1rem;
+}
+.sticky-note-container {
+  height: 250px;
+  width: 235px;
+  background: #fff;
+  position: absolute;
+  border: 0.5px solid #000;
+}
+.sticky-note-header {
+  height: 25px;
+  justify-content: end;
+  display: flex;
+  background: #000;
+}
+.sticky-note-body {
+  background: #fff;
+}
+.sticky-note-input {
+  width: 100%;
+  min-height: 219px;
+}
+textarea:focus {
+  outline: none !important;
+}
+.test-right {
+  width: 22%;
+  background: #edd31d;
+  padding-left: 0.2rem;
+  margin-top: 2.55rem;
+  position: fixed;
+  right: 0%;
+  top: 2%;
+  height: 100vh;
+}
+.test-left-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 22.8rem;
+  margin: 2rem -1rem -1rem 0.5rem;
+}
+.normal-primary-button {
+  border-radius: 20%;
+  margin-left: 10px;
+  color: white;
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 40px !important;
+}
+.normal-button {
+  border-radius: 20%;
+  margin-left: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 40px !important;
+}
+.resize-button-primary-number {
+  border-radius: 20%;
+  margin-left: 10px;
+  color: white;
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 40px !important;
+}
+.resize-button-number {
+  margin-left: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  width: 40px !important;
+  border-radius: 20%;
+}
+.resize-button-number span {
+  margin-left: -5px;
+}
+.resize-button-primary-number span {
+  margin-left: -5px;
+}
+.remove-card-body-padding .ant-card-body {
+  padding: 0px !important;
+}
+.remove-card-body-padding {
+  position: fixed;
+  width: 100%;
+  padding: 0 1% 0 1%;
+  z-index: 1000;
+}
+.type-of-answer {
+  margin-left: 1rem;
+  margin-top: 1.5rem;
+}
+.type-of-answer-item {
+  display: flex;
+}
+.need-review-answer {
+  width: 15px;
+  height: 15px;
+  border: 1px solid white;
+  border-radius: 50%;
+  background: white;
+}
+.need-review-answer-container {
+  display: flex;
+  align-items: center;
+}
+.high-light-container {
+  background: #000;
+  width: fit-content;
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  border-radius: 5px;
+  user-select: none;
+}
+.high-light-btn {
+  padding: 1px;
+  margin-left: 0.1rem;
+  border-right: 1px solid #ccc;
+}
+.high-light-btn:hover {
+  background: #5e5e5e;
+}
+.need-review-answer-label {
+  color: black;
+  margin-bottom: 1px;
+  margin-left: 0.5rem;
+}
+.range-slider__range {
+  -webkit-appearance: none;
+  width: 75px;
+  height: 3px;
+  border-radius: 5px;
+  background: #d7dcdf;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+.range-slider__range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2c3e50;
+  cursor: pointer;
+  transition: background 0.15s ease-in-out;
+}
+//  .range-slider__range::-webkit-slider-thumb:hover {
+// 	 background: #1abc9c;
+// }
+//  .range-slider__range:active::-webkit-slider-thumb {
+// 	 background: #1abc9c;
+// }
+.range-slider__range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: #2c3e50;
+  cursor: pointer;
+  transition: background 0.15s ease-in-out;
+}
+//  .range-slider__range::-moz-range-thumb:hover {
+// 	 background: #1abc9c;
+// }
+//  .range-slider__range:active::-moz-range-thumb {
+// 	 background: #1abc9c;
+// }
+//  .range-slider__range:focus::-webkit-slider-thumb {
+// 	 box-shadow: 0 0 0 3px #fff, 0 0 0 6px #1abc9c;
+// }
+.range-slider__value {
+  display: inline-block;
+  position: relative;
+  width: 60px;
+  color: #fff;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 3px;
+  background: #2c3e50;
+  padding: 5px 10px;
+  margin-left: 8px;
+}
+.btn_style {
+  border: black;
+}
+.normal-answer {
+  width: 15px;
+  height: 15px;
+  border: 1px solid white;
+  background: white;
+  border-radius: 20%;
+}
+.normal-answered {
+  width: 15px;
+  height: 15px;
+  border: 1px solid #000;
+  background: #000;
+  border-radius: 20%;
+}
+.need-review-answered {
+  width: 15px;
+  height: 15px;
+  border: 1px solid #000;
+  background: #000;
+  border-radius: 50%;
+}
+.submit-btn {
+  position: absolute;
+  bottom: 15%;
+  right: 10%;
+}
+.test-right-for-mobile {
+  position: fixed;
+  bottom: -2px;
+  width: 100vw;
+  margin-left: -1%;
+}
+.responsive-content-box {
+  .ant-collapse-content-box {
+    padding: 0px !important;
+  }
+}
+@media (max-width: 1200px) {
+  .listening-site-responsive {
+    padding: 0 1% 0 1% !important;
+    height: 100vh;
+  }
+  .responsive-coundown-mobile {
+    .ant-statistic-content-value {
+      color: white;
+    }
+  }
+  .responsive-listening-site-header {
+    padding: 0 0% 0 1% !important;
+  }
+  .responsive-countdown {
+    right: 1% !important;
+  }
+  .test-right {
+    right: 1%;
+    width: 34%;
+  }
+  .type-of-answer-item {
+    display: grid;
+  }
+  .need-review-answer-container {
+    margin-left: 0px !important;
+  }
+}
+@media (max-width: 1050px) {
+  .custom-audio {
+    width: 50vw;
+  }
+  .slider-main {
+    width: 35vw !important;
+  }
+  .slider-font-size {
+    width: 35vw !important;
+  }
+}
+.test-right-for-mobile {
+  display: none;
+}
+@media (max-width: 1000px) {
+  .test-right {
+    display: none;
+  }
+  .test-left {
+    width: 100%;
+  }
+  .responsive-reading-container {
+    height: 100vh !important;
+  }
+  .responsive-reading-topic {
+    height: 65vh !important;
+  }
+  .responsive-reading-question {
+    height: 65vh !important;
+  }
+  .responsive-card-container {
+    height: 74% !important;
+  }
+  .responsive-countdown {
+    display: none !important;
+  }
+  .test-right-for-mobile {
+    display: grid !important;
+  }
+  .responsive-content-collapse {
+    height: 50vh !important;
+    overflow: scroll;
+  }
+}
+
+@media (max-width: 660px) {
+  .responsive-card-container {
+    height: 90% !important;
+  }
+  .responsive-reading {
+    display: grid !important;
+  }
+  .responsive-divider {
+    display: grid !important;
+  }
+  .responsive-reading-topic {
+    width: 95vw !important;
+    max-width: 100vw !important;
+    height: 41vh !important;
+    max-height: 45vh !important;
+  }
+  .responsive-reading-question {
+    width: 95vw !important;
+    max-width: 100vw !important;
+    height: 40vh !important;
+    max-height: 45vh !important;
+  }
+  .responsive-button-submit {
+    bottom: 2px !important;
+  }
+}
+@media only screen and (max-width: 1050px) and (orientation: portrait) {
+  .responsive-card-container {
+    height: 90% !important;
+  }
+  .responsive-divider {
+    display: grid !important;
+  }
+  .responsive-reading {
+    display: grid !important;
+    height: 90%;
+  }
+  .responsive-reading-topic {
+    width: 95vw !important;
+    max-width: 100vw !important;
+    height: 42vh !important;
+    max-height: 45vh !important;
+  }
+  .responsive-reading-question {
+    width: 95vw !important;
+    max-width: 100vw !important;
+    height: 40vh !important;
+    max-height: 45vh !important;
+  }
+}
+@media (max-width: 500px) {
+  .responsive-listening-site-header-item {
+    display: grid !important;
+    margin-left: 0.5rem;
+  }
+  .custom-audio {
+    width: 100vw;
+  }
+  .slider-main {
+    width: 92vw !important;
+    padding-bottom: 1rem;
+  }
+  .test-left {
+    margin-top: 8.5rem !important;
+    margin-bottom: 4rem !important;
+  }
+  .ant-collapse-content-box {
+    padding: 0px !important;
+  }
+  .responsive-card-container {
+    height: 74% !important;
+  }
+  @media only screen and (max-width: 500px) and (orientation: landscape) {
+  }
+}
+@media only screen and (max-width: 500px) and (orientation: portrait) {
+  .responsive-card-container {
+    height: 88% !important;
+  }
+  .responsive-reading-topic {
+    width: 90vw !important;
+    height: 39vh !important;
+  }
+  .responsive-reading-question {
+    width: 90vw !important;
+    height: 39vh !important;
+  }
 }
 </style>

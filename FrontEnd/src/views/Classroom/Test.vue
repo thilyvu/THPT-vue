@@ -72,7 +72,7 @@
           </div>
         </template>
         <template slot="totalAttempts" slot-scope="record">
-          <h6>{{ record.listKeys.length }}</h6>
+          <h6>{{ record.listKeys && record.listKeys.length ? record.listKeys.length : 0 }}</h6>
         </template>
         <template slot="latestScore" slot-scope="record">
           <h6>{{ record.lastScore }}</h6>
@@ -252,7 +252,7 @@
               <h6>{{ record.index }}</h6>
             </template>
             <template slot="testKey" slot-scope="record">
-              <h6>{{ record.testKey }}</h6>
+              <h6>{{ record.testKey || record.answer }}</h6>
             </template>
             <template slot="key" slot-scope="record">
               <h6
@@ -260,7 +260,7 @@
                   record.isCorrect ? { color: 'green' } : { color: 'red' },
                 ]"
               >
-                {{ record.key }}
+                {{ record.answer }}
               </h6>
             </template>
             <template slot="questionType" slot-scope="record">
@@ -280,7 +280,6 @@ import TableLoading from "../../components/Base/TableLoading.vue";
 import Test from "../../api/Test";
 import Quiz from "../../api/Quiz";
 
-import StudentKeys from "../../api/studentKey";
 import Class from "../../api/Class";
 import QuizStudentKeys from "../../api/quizStudentKey";
 export default {
@@ -403,25 +402,8 @@ export default {
       ])
     )
       .then((response) => {
-
-        this.listTest = response.data.data.sort((a, b) => {
-          const numA = parseInt(a.name.split(" ")[1]);
-          const numB = parseInt(b.name.split(" ")[1]);
-          const charA = a.name[a.name.indexOf("-") - 2];
-          const charB = b.name[b.name.indexOf("-") - 2];
-          // If the numeric part is the same, then compare by characters.
-          if (numA === numB) {
-            return charA.localeCompare(charB);
-          }
-          // Comp
-          // Comparing the numbers for sorting in descending order
-          return numB - numA;
-        });
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-    this.userProfile.role === "teacher" || this.userProfile.role === "admin"
+        this.listTest = response.data.data;
+        this.userProfile.role === "teacher" || this.userProfile.role === "admin"
       ? QuizStudentKeys.getStudentKeyByClassId({
           classId: this.classId,
         }).then((res) => {
@@ -459,6 +441,24 @@ export default {
           });
           console.log(res.data.data);
         });
+        // .sort((a, b) => {
+        //   const numA = parseInt(a.name.split(" ")[1]);
+        //   const numB = parseInt(b.name.split(" ")[1]);
+        //   const charA = a.name[a.name.indexOf("-") - 2];
+        //   const charB = b.name[b.name.indexOf("-") - 2];
+        //   // If the numeric part is the same, then compare by characters.
+        //   if (numA === numB) {
+        //     return charA.localeCompare(charB);
+        //   }
+        //   // Comp
+        //   // Comparing the numbers for sorting in descending order
+        //   return numB - numA;
+        // });
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+   
 
     Class.getListClass(
       new URLSearchParams([
@@ -506,7 +506,7 @@ export default {
         classId: this.classId,
         testId: record._id,
       };
-      StudentKey.getcurrentStudentKeyByClassAndTestId(payload)
+      QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizId(payload)
         .then((response) => {
           this.data = response.data.data;
           this.studentKeyLoading = false;
@@ -573,7 +573,7 @@ export default {
           this.visibleDeleteQuiz = false;
           const payload = {
             classId: this.classId,
-            quizId: this.selectedId,
+            quizId: this.selectedQuizId,
           };
           QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizId(payload)
           .then((response) => {
@@ -730,12 +730,12 @@ export default {
               dataIndex: "",
               scopedSlots: { customRender: "totalAttempts" },
             },
-            {
-              title: "Skill(s)",
-              key: "testType",
-              dataIndex: "",
-              scopedSlots: { customRender: "testType" },
-            },
+            // {
+            //   title: "Skill(s)",
+            //   key: "testType",
+            //   dataIndex: "",
+            //   scopedSlots: { customRender: "testType" },
+            // },
             {
               title: "",
               key: "action",

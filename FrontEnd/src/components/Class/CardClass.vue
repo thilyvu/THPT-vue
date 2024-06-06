@@ -5,7 +5,7 @@
         :bordered="false"
         class="card-info card-class"
         style="margin-top: 10px; max-height: 245px; margin-top: 1.5rem"
-        @click="isSearch ? blankMethod : enterClass(item)"
+        @click="isSearch ? blankMethod :  (userProfile.role === 'student' && checkIfIsInClass(item._id) || userProfile.role === 'teacher') ? enterClass(item) : blankMethod"
       >
         <div class="card-img-bg">
           <img :src="item.bannerImg" alt="" />
@@ -142,8 +142,7 @@ export default {
       this.isDelete = true;
     },
     checkIfIsInClass(id) {
-      console.log(id,  this.listPersonalClass.findIndex((item) => item._id === id))
-      this.listPersonalClass.findIndex((item) => item._id === id) > -1
+      return this.listPersonalClass.findIndex((item) => item._id.toString() === id) > -1 
     },
     deleteClass() {
       this.$emit("delete", this.deleteData._id);
