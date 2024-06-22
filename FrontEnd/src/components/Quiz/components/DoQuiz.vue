@@ -403,6 +403,7 @@ export default {
       studentResult: {},
       listStudentKeys: [],
       quizzes: [],
+      canSendTest : false,
       isLeave : false,
       currentStudentKeyId: null,
       innerStudentKeycolumns: [
@@ -724,7 +725,7 @@ export default {
         this.testName = data.name;
         this.testDescription = data.testDescription;
         this.testType = data.testType;
-        this.quizzes = data.quizzes;
+        this.quizzes = data.quizzes.map((quiz, quizIndex) => ({...quiz, index: quizIndex}));
         let counter = 0;
         for (let i = 0; i < data.quizzes.length; i++) {
           if(data.quizzes[i].type !== 'content' ){
@@ -744,34 +745,42 @@ export default {
           parseInt(hours) * 60 * 60 * 1000 +
           parseInt(minutes, 0) * 60 * 1000 +
           parseInt(seconds, 0) * 1000;
-      })
-      .catch((e) => {
-        console.log("e", e);
-      });
-    // get list question type
-    QuestionType.getListQuestionType()
-      .then((response) => {
-        this.listQuestionType = response.data.data;
-      })
-      .catch((e) => {
-        console.log("e", e);
-      });
-    this.loading = false;
-    //get data for test that are inprocess or has just started
-    QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizIdAndStudentId({
+          QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizIdAndStudentId({
       classId: this.classId,
       quizId: this.$route.params.exerciseId,
       studentId: this.userProfile.id,
     })
       .then((response) => {
+        const responseData = response.data.data.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
         if (
-          response.data.data &&
-          response.data.data.length > 0 &&
-          response.data.data[0] &&
-          (response.data.data[0].status === "inProcess" ||
-            response.data.data[0].status === "started")
+          responseData &&
+          responseData.length > 0 &&
+          responseData[0] &&
+            (responseData[0].status === "inProcess" ||
+            responseData[0].status === "started")
         ) {
-          this.currentStudentKeyId = response.data.data[0]._id;
+          this.currentStudentKeyId =responseData[0]._id;
+          this.canSendTest = true;
+          this.studentCheckedKeys = [];
+          const keys = {
+            "A" : 0,
+            "B" : 1,
+            "C" : 2,
+            "D" : 3
+          };
+
+          const listQuestion = this.quizzes.filter((quiz) => quiz.type !== 'content')
+          const oldStudentKeys = response.data.data[0].studentKeys;
+          for (let i = 0; i < oldStudentKeys.length; i++) {
+            this.studentCheckedKeys.push({
+            content: "",
+            answer: oldStudentKeys[i].answer,
+            isReview: false,
+            quiz : oldStudentKeys[i].quiz,
+            studentKeyIndex : i
+          });
+          this.quizzes[listQuestion[i].index].valueForRadio = keys[oldStudentKeys[i].answer]
+        }
           // this.listStudentKeys =  response.data.data[0].listKeys;
           this.loading = false;
         } else {
@@ -787,6 +796,7 @@ export default {
             .then((response) => {
               this.currentStudentKeyId = response.data.newStudentKeyCreated._id;
               this.loading = false;
+              this.canSendTest = true;
             })
             .catch((error) => {
               this.openNotificationWithIcon(
@@ -801,6 +811,21 @@ export default {
       .catch((e) => {
         this.loading = false;
       });
+      })
+      .catch((e) => {
+        console.log("e", e);
+      });
+    // get list question type
+    QuestionType.getListQuestionType()
+      .then((response) => {
+        this.listQuestionType = response.data.data;
+      })
+      .catch((e) => {
+        console.log("e", e);
+      });
+    this.loading = false;
+    //get data for test that are inprocess or has just started
+    
   },
   watch: {
     sendTest(value) {
@@ -887,6 +912,9 @@ export default {
       return questionNumber && questionNumber.match(/\d+$/) &&  questionNumber.match(/\d+$/).length > 0 ? questionNumber.match(/\d+$/)[0] : ''
     },
     handleSendKeyTest(isDoing) {
+      if(! this.canSendTest) {
+        return;
+      }
       this.visibleSendKey = false;
       this.sendKeyLoading = false;
 

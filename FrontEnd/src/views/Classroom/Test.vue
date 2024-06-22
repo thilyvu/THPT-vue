@@ -116,7 +116,7 @@
                 v-if="userProfile.role === 'teacher'"
                 @click="confirmDelete(record)"
               >
-                <a-icon type="delete" style="color: red" />
+                <a-icon type="delete" style="color: red; cursor: pointer;" />
                 <span style="color: red">Delete test from class</span>
               </a-menu-item>
 
@@ -232,7 +232,7 @@
                         @click="confirmDeleteStudentKey(record)"
                         style="display: flex"
                       >
-                        <a-icon type="delete" style="color: red; margin-top: 5px" />
+                        <a-icon type="delete" style="color: red; margin-top: 5px; cursor: pointer;" />
                   </a-menu-item>
             </template>
         <p
@@ -302,6 +302,7 @@ export default {
       txtSearch: "",
       studentKeyLoading: false,
       listTest: null,
+      currentTestId : null,
       selectedClasses: [],
       selectedId: null,
       selectedQuizId: null,
@@ -424,11 +425,12 @@ export default {
           this.studentKeys = res.data.data;
           this.listTest = this.listTest.map((item) => {
             const studentKeysByTestId = this.studentKeys.filter(
-              (key) => key.testId === item._id
+              (key) => key.quizId === item._id
             );
             const sortedStudentKey = this.studentKeys
-              .filter((key) => key.testId === item._id)
+              .filter((key) => key.quizId === item._id)
               .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
             return {
               ...item,
               listKeys: studentKeysByTestId,
@@ -439,7 +441,6 @@ export default {
                   : "--",
             };
           });
-          console.log(res.data.data);
         });
         // .sort((a, b) => {
         //   const numA = parseInt(a.name.split(" ")[1]);
@@ -481,6 +482,7 @@ export default {
     viewListStudentAnswers(record) {
       this.visibleViewStudentKeys = true;
       this.studentKeyLoading = true;
+      this.currentTestId = record._id;
       const payload = {
         classId: this.classId,
         quizId: record._id,
@@ -504,14 +506,14 @@ export default {
       this.studentKeyLoading = true;
       const payload = {
         classId: this.classId,
-        testId: record._id,
+        quizId: record._id,
+        studentId : this.userProfile.id,
       };
-      QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizId(payload)
+      QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizIdAndStudentId(payload)
         .then((response) => {
-          this.data = response.data.data;
+          this.data = response.data.data.map((item, index) => ({...item, index : index + 1}));
           this.studentKeyLoading = false;
-          console.log(response);
-          this.isShowPoint = response.data.test.isShowPoint;
+          this.isShowPoint = record.isShowPoint;
         })
         .catch((e) => {
           this.studentKeyLoading = false;
@@ -573,7 +575,7 @@ export default {
           this.visibleDeleteQuiz = false;
           const payload = {
             classId: this.classId,
-            quizId: this.selectedQuizId,
+            quizId: this.currentTestId,
           };
           QuizStudentKeys.getCurrentQuizStudentKeyByClassAndQuizId(payload)
           .then((response) => {
@@ -719,16 +721,16 @@ export default {
               scopedSlots: { customRender: "testName" },
             },
             {
-              title: "Latest Score",
-              key: "latestScore",
-              dataIndex: "",
-              scopedSlots: { customRender: "latestScore" },
-            },
-            {
               title: "Total Attempts",
               key: "totalAttempts",
               dataIndex: "",
               scopedSlots: { customRender: "totalAttempts" },
+            },
+            {
+              title: "Latest Score",
+              key: "latestScore",
+              dataIndex: "",
+              scopedSlots: { customRender: "latestScore" },
             },
             // {
             //   title: "Skill(s)",

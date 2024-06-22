@@ -471,16 +471,17 @@ const getQuizStudentKeyById = async (req, res) => {
 
 const deleteQuizStudentKey = async (req, res) => {
   try {
-    const studentKey = await QuizStudentKey.findById(req.params.id);
-    if (!studentKey) {
+    const result = await QuizStudentKey.findByIdAndDelete(req.params.id);
+
+    if (!result) {
       return res.status(404).json({
-        message: "studentKey not found. Invalid id of studentKey",
+        message: "Quiz studentKey not found. Invalid id of quiz studentKey",
         success: false,
       });
     }
-    await QuizStudentKey.remove(studentKey);
-    return res.status(201).json({
-      message: "studentKey successfully deleted",
+
+    return res.status(200).json({
+      message: "Quiz studentKey successfully deleted",
       success: true,
     });
   } catch (err) {
@@ -490,6 +491,7 @@ const deleteQuizStudentKey = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   createQuizStudentKey,
   updateQuizStudentKey,
