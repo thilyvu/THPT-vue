@@ -6,7 +6,7 @@ export default {
   updateStudentKey(id, payload) {
     return api.put("/quizStudentKey/" + id, payload);
   },
-  deleteStudentKey(id) {
+  deleteQuizStudentKey(id) {
     return api.delete("/quizStudentKey/" + id);
   },
   getListStudentKey() {

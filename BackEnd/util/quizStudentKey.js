@@ -151,21 +151,25 @@ const updateQuizStudentKey = async (req, res) => {
       "-listAnswers",
     ]);
     let listTopics = _.cloneDeep(likeQuiz.listTopics);
-    var totalCorrect = likeQuiz.quizzes.filter((quiz) => quiz.type !=='content').length;
-    var totalQuestions = likeQuiz.quizzes.filter((quiz) => quiz.type !=='content').length;
+    var totalCorrect = likeQuiz.quizzes.filter(
+      (quiz) => quiz.type !== "content"
+    ).length;
+    var totalQuestions = likeQuiz.quizzes.filter(
+      (quiz) => quiz.type !== "content"
+    ).length;
     if (result.status !== "started") {
-      likeQuiz.quizzes.filter((quiz) => quiz.type !=='content').map((quiz, quizIndex) => {
-        const studentKey = studentKeys[quizIndex].answer.trim().toString();
-        
-        const testKeys = quiz.key.toString().trim();
-        if (
-          studentKey !== testKeys
-        ) {
-          totalCorrect--;
-          studentKeys[quizIndex].isCorrect = false;
-          studentKeys[quizIndex].testKey = testKeys
-        }
-      });
+      likeQuiz.quizzes
+        .filter((quiz) => quiz.type !== "content")
+        .map((quiz, quizIndex) => {
+          const studentKey = studentKeys[quizIndex].answer.trim().toString();
+
+          const testKeys = quiz.key.toString().trim();
+          if (studentKey !== testKeys) {
+            totalCorrect--;
+            studentKeys[quizIndex].isCorrect = false;
+            studentKeys[quizIndex].testKey = testKeys;
+          }
+        });
       const newStudentKey = {
         ...result,
         listTopics: listTopics,
@@ -257,7 +261,7 @@ const getListQuizStudentKey = async (req, res) => {
 
 const getQuizStudentKeyByClassAndQuizId = async (req, res) => {
   try {
-    const result = await studentKeyGetByClassAndTestSchema.validateAsync(
+    const result = await quizStudentKeyGetByClassAndQuizSchema.validateAsync(
       req.body
     );
     const listStudentKey = await QuizStudentKey.find({

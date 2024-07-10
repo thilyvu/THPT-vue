@@ -104,7 +104,6 @@
                 <a-icon type="edit" /> Edit Test
               </a-menu-item>
               <a-menu-item
-                v-if="userProfile.role !== 'testCT'"
                 @click="addTestToClass(record)"
               >
                 <a-icon type="usergroup-add" /> Add Test To Class

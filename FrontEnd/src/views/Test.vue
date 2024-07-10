@@ -72,12 +72,9 @@ const MemembersColumns = [
 
 import { FirebaseStorageMixin } from "../mixin/FirebaseStorage";
 import { NotificationMixin } from "../mixin/Notification";
-
-import { ActiveTextTruncate } from '@icij/murmur'
 import ListLesson from "../components/Lesson/ListLesson.vue";
 import Request from "../components/Members/Request.vue";
 import ExcerciseInfo from "../components/Excercises/ExcerciseInfo.vue";
-import Lecture from "../api/Lecture";
 
 export default {
   mixins: [FirebaseStorageMixin, NotificationMixin],

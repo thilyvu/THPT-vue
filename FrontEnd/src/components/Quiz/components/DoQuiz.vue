@@ -286,6 +286,271 @@
             </v-btn>
           </div>
         </div>
+
+        <div class="test-right-for-mobile">
+          <a-collapse class="remove-collapse" style="color: white" expand-icon-position="right">
+            <template #expandIcon="props">
+              <a-icon
+                style="padding-bottom: 2px; "
+                type="caret-right"
+                :rotate="props.isActive ? 90 : -90"
+              />
+            </template>
+
+            <a-collapse-panel
+              class="responsive-content-box"
+              style="background: #edd31d !important; color: white"
+              key="1"
+            >
+              <template slot="header">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
+                  <b style="color: black; font-size: 18px">Question Palette </b>
+                  <a-statistic-countdown
+                    v-if="countDown"
+                    :value="countDown"
+                    class="responsive-coundown-mobile"
+                    format="HH:mm:ss"
+                    @finish="onFinish"
+                    style="color: white !important  "
+                  />
+                </div>
+              </template>
+              <div
+                class="responsive-content-collapse"
+                style="background: #edd31d; margin:  -16px !important;"
+              >
+                <h5
+                  style="
+                    color: black;
+                    font-size: 18px;
+                    padding-top: 0.5rem;
+                    text-align: center;
+                  "
+                >
+                  {{ this.testName }}
+                </h5>
+                <div style="width: 100%; display: flex">
+                  <div
+                    style="
+                      width: 96%;
+                      padding: 0px;
+                      margin-left: 0.5rem;
+                      height: fix-content;
+                    "
+                  >
+                    <div style="display: flex; flex-wrap: wrap">
+                      <div
+                        v-for="(item, index) in studentCheckedKeys"
+                        :key="index"
+                      >
+                        <div
+                          style="margin-top: 0.5rem"
+                          v-if="
+                            studentCheckedKeys &&
+                            studentCheckedKeys[index] &&
+                            studentCheckedKeys[index].answer !== ''
+                          "
+                        >
+                          <a-dropdown v-if="!item.isReview">
+                            <a-button
+                              size="default"
+                              :class="
+                                index > 8
+                                  ? 'resize-button-primary-number'
+                                  : 'normal-primary-button'
+                              "
+                              class="btn_style"
+                              type="primary"
+                              style="background: #000"
+                              @click="handleReview(item.studentKeyIndex)"
+                            >
+                              {{ index + 1 }}
+                            </a-button>
+                            <template #overlay>
+                              <a-menu>
+                                <a-menu-item>
+                                  <a
+                                    @click="
+                                      handleCheckReviewForListening(index)
+                                    "
+                                  >
+                                    {{
+                                      studentCheckedKeys[index].isReview
+                                        ? "UnReview"
+                                        : "Review"
+                                    }}
+                                  </a>
+                                </a-menu-item>
+                              </a-menu>
+                            </template>
+                          </a-dropdown>
+
+                          <a-dropdown v-if="item.isReview">
+                            <a-button
+                              size="default"
+                              :class="
+                                index > 8
+                                  ? 'resize-button-primary-number'
+                                  : 'normal-primary-button'
+                              "
+                              type="primary"
+                              style="background: #000"
+                              shape="circle"
+                              class="btn_style"
+                              @click="handleReview(item.studentKeyIndex)"
+                            >
+                              {{ index + 1 }}
+                            </a-button>
+
+                            <template #overlay>
+                              <a-menu>
+                                <a-menu-item>
+                                  <a
+                                    @click="
+                                      handleCheckReviewForListening(index)
+                                    "
+                                  >
+                                    {{
+                                      studentCheckedKeys[index].isReview
+                                        ? "UnReview"
+                                        : "Review"
+                                    }}
+                                  </a>
+                                </a-menu-item>
+                              </a-menu>
+                            </template>
+                          </a-dropdown>
+                        </div>
+                        <div style="margin-top: 0.5rem" v-else>
+                          <a-dropdown v-if="item.isReview">
+                            <a-button
+                              size="default"
+                              :class="
+                                index > 8
+                                  ? 'resize-button-number'
+                                  : 'normal-button'
+                              "
+                              shape="circle"
+                              @click="handleReview(item.studentKeyIndex)"
+                            >
+                              {{ index + 1 }}
+                            </a-button>
+
+                            <template #overlay>
+                              <a-menu>
+                                <a-menu-item>
+                                  <a
+                                    @click="
+                                      handleCheckReviewForListening(index)
+                                    "
+                                  >
+                                    {{
+                                      studentCheckedKeys[index].isReview
+                                        ? "UnReview"
+                                        : "Review"
+                                    }}
+                                  </a>
+                                </a-menu-item>
+                              </a-menu>
+                            </template>
+                          </a-dropdown>
+
+                          <a-dropdown v-else>
+                            <a-button
+                              :class="
+                                index > 8
+                                  ? 'resize-button-number'
+                                  : 'normal-button'
+                              "
+                              @click="handleReview(item.studentKeyIndex)"
+                              size="default"
+                            >
+                              {{ index + 1 }}
+                            </a-button>
+
+                            <template #overlay>
+                              <a-menu>
+                                <a-menu-item>
+                                  <a
+                                    @click="
+                                      handleCheckReviewForListening(index)
+                                    "
+                                  >
+                                    {{
+                                      studentCheckedKeys[index].isReview
+                                        ? "UnReview"
+                                        : "Review"
+                                    }}
+                                  </a>
+                                </a-menu-item>
+                              </a-menu>
+                            </template>
+                          </a-dropdown>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="type-of-answer">
+                  <div class="type-of-answer-item">
+                    <div class="need-review-answer-container">
+                      <div class="normal-answered"></div>
+                      <p class="need-review-answer-label">Answered</p>
+                    </div>
+                    <div
+                      style="margin-left: 3rem"
+                      class="need-review-answer-container"
+                    >
+                      <div class="need-review-answered"></div>
+                      <p class="need-review-answer-label">
+                        Answered need to review
+                      </p>
+                    </div>
+                  </div>
+                  <div class="type-of-answer-item">
+                    <div class="need-review-answer-container">
+                      <div class="normal-answer"></div>
+                      <p class="need-review-answer-label">Answer</p>
+                    </div>
+                    <div
+                      style="margin-left: 4rem"
+                      class="need-review-answer-container"
+                    >
+                      <div class="need-review-answer"></div>
+                      <p class="need-review-answer-label">
+                        Answer need to review
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="
+                    text-align: end;
+                    margin-top: 0.5rem;
+                    padding-bottom: 0.5rem;
+                  "
+                >
+                  <v-btn
+                    color="primary"
+                    dark
+                    style="margin-right: 10px"
+                    @click="handleSubmit"
+                  >
+                    <!-- <img style="width :20px; margin-right :1rem" src="../../../assets/send.png" /> -->
+                    Submit
+                    <v-icon dark right> mdi-send </v-icon>
+                  </v-btn>
+                </div>
+              </div>
+            </a-collapse-panel>
+          </a-collapse>
+        </div>
       </div>
       <a-modal
       title="Xác nhận nộp bài"
@@ -1648,8 +1913,11 @@ textarea:focus {
   margin-left: -1%;
 }
 .responsive-content-box {
+  background: #edd31d !important; 
+  color: white;
   .ant-collapse-content-box {
     padding: 0px !important;
+    background: #edd31d !important; 
   }
 }
 @media (max-width: 1200px) {
@@ -1720,6 +1988,7 @@ textarea:focus {
   }
   .responsive-content-collapse {
     height: 50vh !important;
+    background: #edd31d !important;
     overflow: scroll;
   }
 }
@@ -1792,6 +2061,8 @@ textarea:focus {
   }
   .ant-collapse-content-box {
     padding: 0px !important;
+    background: #edd31d !important
+
   }
   .responsive-card-container {
     height: 74% !important;

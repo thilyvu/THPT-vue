@@ -114,6 +114,12 @@
               </a-menu-item>
               <a-menu-item
                 v-if="userProfile.role === 'teacher'"
+                @click="handleViewStats(record)"
+              >
+                <a-icon type="download" /> View stats
+              </a-menu-item>
+              <a-menu-item
+                v-if="userProfile.role === 'teacher'"
                 @click="confirmDelete(record)"
               >
                 <a-icon type="delete" style="color: red; cursor: pointer;" />
@@ -270,6 +276,55 @@
         </p>
       </a-table>
     </a-modal>
+
+    <a-modal
+      title= "Student statistics"
+      :visible="visibleViewStats"
+      class ="responsive-implementer"
+      :confirm-loading="deleteTestLoading"
+      ok-text="Confirm"
+      width="90vw"
+      cancel-text="Cancel"
+      @cancel="() => (visibleViewStats = false)"
+    >
+      <template slot="footer">
+        <a-button key="back" @click="() => (visibleViewStats = false)">
+          Back to class
+        </a-button>
+      </template>
+      <TableLoading v-if="statsLoading" />
+      <a-table
+        style="max-height : 85vh; overflow-y: scroll"
+        v-else
+        :columns="statsColumns"
+        :data-source="statsData"
+        :pagination = "false"
+        size="small"
+      >
+        <template slot="index" slot-scope="record">
+            <h6> Question {{ record.index }}</h6>
+        </template>
+        <template v-if="userProfile.role === 'teacher'" slot="takerName" slot-scope="createdUser">
+          <h6>{{ createdUser.name }}</h6>
+        </template>
+        <template slot="percentage" slot-scope="record">
+          <h6 >{{ record.totalFalse || 0 }} / {{ record.total }}</h6>
+        </template>
+        <template slot="wrongAnswers" slot-scope="record">
+          {{ record.wrongAnswers }}
+        </template>
+        <template
+            slot="action" slot-scope="record">
+                <a-menu-item
+                      v-if="userProfile.role !== 'student'"
+                      @click="confirmDeleteStudentKey(record)"
+                      style="display: flex"
+                    >
+                      <a-icon type="delete" style="color: red; margin-top: 5px; cursor: pointer;" />
+                </a-menu-item>
+          </template>
+      </a-table>
+    </a-modal>
   </div>
 </template>
 
@@ -338,6 +393,30 @@ export default {
         },
       ],
       data: [],
+      statsData : [],
+      statsColumns: [
+      {
+          title: "Question",
+          dataIndex: "",
+          key: "index",
+          scopedSlots: { customRender: "index" },
+          width: 150
+        },
+        {
+          title: "Percentage",
+          dataIndex: "",
+          key: "percentage",
+          scopedSlots: { customRender: "percentage" },
+          width: 150
+        },
+        {
+          title: "Wrong Answers",
+          dataIndex: "",
+          key: "wrongAnswers",
+          scopedSlots: { customRender: "wrongAnswers" },
+        },
+      
+      ],
       innerStudentKeycolumns: [
         {
           title: "Question",
@@ -378,6 +457,8 @@ export default {
       visibleDeleteQuiz: false,
       deleteTestLoading: false,
       visibleViewStudentKeys: false,
+      visibleViewStats: false,
+      statsLoading : false,
     };
   },
   computed: {
@@ -469,10 +550,13 @@ export default {
     )
       .then((response) => {
         this.listClass = response.data.data.sort((a, b) => {
-          return a.testName
-            .toLowerCase()
-            .localeCompare(b.testName.toLowerCase());
-        });
+                if(a.testName && b.testName)
+                  {
+                  return a.testName.toLowerCase().localeCompare(b.testName.toLowerCase());
+
+                  }
+                  return -1
+              });
       })
       .catch((e) => {
         console.log(e);
@@ -495,6 +579,42 @@ export default {
         })
         .catch((e) => {
           this.studentKeyLoading = false;
+          console.log(e);
+        });
+    },
+    handleViewStats (record) {
+      this.visibleViewStats = true;
+      this.statsLoading = true;
+      const payload = {
+        classId: this.classId,
+        quizId: record._id,
+      };
+      QuizStudentKeys.getQuizStudentKeyByClassAndQuizId(payload)
+        .then((response) => {
+          this.statsData = response.data.data.sort((a, b) => b.studentKeys.length - a.studentKeys.length)[0].studentKeys;
+          this.statsLoading = false;
+          const listStudentKeys = response.data.data.reduce((acc, item) => acc.concat(item.studentKeys), []);
+          const total = response.data.data.length;
+          console.log(response.data.data.sort((a, b) => a.studentKeys.length - b.studentKeys.length));
+
+          this.statsData = this.statsData.map((question) => {
+            const wrongAnswers = listStudentKeys.filter((item) => item.index === question.index && !item.isCorrect);
+            const wrongAnswerContent = Array.from(new Set(listStudentKeys
+              .filter(item => item.index === question.index && !item.isCorrect && Boolean(item.key))
+              .map(item => item.key)
+          ));
+
+            return {
+            ...question,
+            totalFalse : wrongAnswers.length,
+            total : total,
+            wrongAnswers : wrongAnswerContent.join(', ')
+          }
+          });
+
+        })
+        .catch((e) => {
+          this.statsLoading = false;
           console.log(e);
         });
     },
@@ -566,10 +686,10 @@ export default {
     },
     handleDeleteQuiz() {
       this.deleteTestLoading = true;
-      QuizStudentKeys.deleteStudentKey(this.selectedQuizId).then((response) => {
+      QuizStudentKeys.deleteQuizStudentKey(this.selectedQuizId).then((response) => {
           this.openNotificationWithIcon(
             "success",
-            "Delete student key from test successfully"
+            "Delete quiz student key from test successfully"
           );
           this.deleteTestLoading = false;
           this.visibleDeleteQuiz = false;
